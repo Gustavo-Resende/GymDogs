@@ -10,4 +10,9 @@
     <ProjectReference Include="..\GymDogs.Domain\GymDogs.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\Interfaces\" />
+    <Folder Include="Exercises\" />
+  </ItemGroup>
+
 </Project>
