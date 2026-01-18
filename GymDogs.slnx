@@ -1,0 +1,10 @@
+<Solution>
+  <SolutionFolder Name="Solution Items">
+    <Item Path="Dockerfile" />
+    <Item Path=".dockerignore" />
+  </SolutionFolder>
+  <Project Path="src/GymDogs.Application/GymDogs.Application.csproj" />
+  <Project Path="src/GymDogs.Domain/GymDogs.Domain.csproj" />
+  <Project Path="src/GymDogs.Infrastructure/GymDogs.Infrastructure.csproj" />
+  <Project Path="src/GymDogs.Presentation/GymDogs.Presentation.csproj" />
+</Solution>
