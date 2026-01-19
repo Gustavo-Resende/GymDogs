@@ -6,8 +6,6 @@ using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Profiles;
 using GymDogs.Domain.Users;
 using GymDogs.Domain.Users.Specification;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace GymDogs.Application.Users.Commands;
 
@@ -20,6 +18,7 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
     private readonly IRepository<Profile> _profileRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _unitOfWork;
+
     public CreateUserCommandHandler(
         IRepository<User> userRepository,
         IRepository<Profile> profileRepository,
@@ -75,7 +74,7 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
         var user = new User(usernameNormalized, emailNormalized, passwordHash);
         await _userRepository.AddAsync(user, cancellationToken);
 
-        var profile = new Profile(user.Id, usernameNormalized);   
+        var profile = new Profile(user.Id, usernameNormalized);
         await _profileRepository.AddAsync(profile, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
