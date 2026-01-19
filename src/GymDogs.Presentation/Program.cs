@@ -1,5 +1,7 @@
-
+using GymDogs.Application;
+using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
+using GymDogs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymDogs.Presentation
@@ -15,9 +17,19 @@ namespace GymDogs.Presentation
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
+            builder.Services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly));
+
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+            builder.Services.AddSwaggerGen();
+
+            builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
+
 
             var app = builder.Build();
 
@@ -25,12 +37,16 @@ namespace GymDogs.Presentation
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/openapi/v1.json", "API v1");
+                });
             }
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
