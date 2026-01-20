@@ -5,6 +5,7 @@ using GymDogs.Application.Profiles.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -139,12 +140,14 @@ public record UpdateProfileRequest
     /// Nome de exibição do perfil
     /// </summary>
     /// <example>João Silva</example>
+    [StringLength(200, ErrorMessage = "DisplayName deve ter no máximo 200 caracteres")]
     public string? DisplayName { get; init; }
 
     /// <summary>
     /// Biografia do perfil (máximo 1000 caracteres)
     /// </summary>
     /// <example>Entusiasta de musculação e vida saudável</example>
+    [StringLength(1000, ErrorMessage = "Bio deve ter no máximo 1000 caracteres")]
     public string? Bio { get; init; }
 }
 
@@ -157,5 +160,6 @@ public record UpdateProfileVisibilityRequest
     /// Nova visibilidade do perfil (1 = Public, 2 = Private)
     /// </summary>
     /// <example>1</example>
+    [Required(ErrorMessage = "Visibility é obrigatório")]
     public ProfileVisibilityDto Visibility { get; init; }
 }

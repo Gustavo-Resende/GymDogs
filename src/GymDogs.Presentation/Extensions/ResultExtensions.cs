@@ -1,5 +1,6 @@
 using Ardalis.Result;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace GymDogs.Presentation.Extensions;
 
@@ -16,7 +17,7 @@ public static class ResultExtensions
         return result.Status switch
         {
             ResultStatus.Ok => new OkObjectResult(result.Value),
-            ResultStatus.Created => new CreatedResult(string.Empty, result.Value),
+            ResultStatus.Created => CreateCreatedResult(result.Value),
             ResultStatus.Invalid => new BadRequestObjectResult(new
             {
                 status = "Invalid",
@@ -54,6 +55,34 @@ public static class ResultExtensions
                 StatusCode = 500
             }
         };
+    }
+
+    /// <summary>
+    /// Cria um CreatedResult apropriado com route name quando possível
+    /// </summary>
+    private static ActionResult<T> CreateCreatedResult<T>(T? value) where T : class
+    {
+        if (value == null)
+        {
+            return new CreatedResult(string.Empty, value);
+        }
+
+        // Tenta extrair o Id usando reflexão para criar CreatedAtRoute
+        var idProperty = value.GetType().GetProperty("Id");
+        if (idProperty != null)
+        {
+            var id = idProperty.GetValue(value);
+            if (id != null)
+            {
+                return new CreatedAtActionResult(
+                    actionName: null,
+                    controllerName: null,
+                    routeValues: new { id },
+                    value: value);
+            }
+        }
+
+        return new CreatedResult(string.Empty, value);
     }
 
     /// <summary>

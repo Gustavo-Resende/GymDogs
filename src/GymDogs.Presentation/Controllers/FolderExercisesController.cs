@@ -4,6 +4,7 @@ using GymDogs.Application.FolderExercises.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -153,12 +154,14 @@ public record AddExerciseToFolderRequest
     /// ID do exercício a ser adicionado
     /// </summary>
     /// <example>3fa85f64-5717-4562-b3fc-2c963f66afa6</example>
+    [Required(ErrorMessage = "ExerciseId é obrigatório")]
     public Guid ExerciseId { get; init; }
 
     /// <summary>
     /// Ordem de exibição do exercício na pasta (padrão: 0)
     /// </summary>
     /// <example>1</example>
+    [Range(0, int.MaxValue, ErrorMessage = "Order deve ser maior ou igual a 0")]
     public int Order { get; init; } = 0;
 }
 
@@ -171,5 +174,7 @@ public record UpdateFolderExerciseOrderRequest
     /// Nova ordem de exibição
     /// </summary>
     /// <example>2</example>
+    [Required(ErrorMessage = "Order é obrigatório")]
+    [Range(0, int.MaxValue, ErrorMessage = "Order deve ser maior ou igual a 0")]
     public int Order { get; init; }
 }

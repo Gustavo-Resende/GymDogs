@@ -4,6 +4,7 @@ using GymDogs.Application.Exercises.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -153,12 +154,15 @@ public record CreateExerciseRequest
     /// Nome do exercício (máximo 200 caracteres)
     /// </summary>
     /// <example>Supino Reto</example>
+    [Required(ErrorMessage = "Name é obrigatório")]
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Name deve ter entre 1 e 200 caracteres")]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// Descrição do exercício (opcional, máximo 1000 caracteres)
     /// </summary>
     /// <example>Exercício para desenvolvimento do peitoral</example>
+    [StringLength(1000, ErrorMessage = "Description deve ter no máximo 1000 caracteres")]
     public string? Description { get; init; }
 }
 
@@ -171,11 +175,13 @@ public record UpdateExerciseRequest
     /// Novo nome do exercício
     /// </summary>
     /// <example>Supino Reto com Barra</example>
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Name deve ter entre 1 e 200 caracteres")]
     public string? Name { get; init; }
 
     /// <summary>
     /// Nova descrição do exercício
     /// </summary>
     /// <example>Exercício para desenvolvimento do peitoral usando barra</example>
+    [StringLength(1000, ErrorMessage = "Description deve ter no máximo 1000 caracteres")]
     public string? Description { get; init; }
 }

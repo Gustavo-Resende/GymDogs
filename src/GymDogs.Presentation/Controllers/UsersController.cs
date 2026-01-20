@@ -5,6 +5,7 @@ using GymDogs.Application.Users.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -209,18 +210,26 @@ public record CreateUserRequest
     /// Nome de usuário único (máximo 100 caracteres)
     /// </summary>
     /// <example>johndoe</example>
+    [Required(ErrorMessage = "Username é obrigatório")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Username deve ter entre 3 e 100 caracteres")]
     public string Username { get; init; } = string.Empty;
 
     /// <summary>
     /// Email único do usuário
     /// </summary>
     /// <example>john@example.com</example>
+    [Required(ErrorMessage = "Email é obrigatório")]
+    [EmailAddress(ErrorMessage = "Email inválido")]
+    [StringLength(200, ErrorMessage = "Email deve ter no máximo 200 caracteres")]
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
     /// Senha do usuário (será hasheada antes de salvar)
     /// </summary>
     /// <example>SecurePassword123!</example>
+    [Required(ErrorMessage = "Senha é obrigatória")]
+    [MinLength(6, ErrorMessage = "Senha deve ter no mínimo 6 caracteres")]
+    [MaxLength(100, ErrorMessage = "Senha deve ter no máximo 100 caracteres")]
     public string Password { get; init; } = string.Empty;
 }
 
@@ -233,6 +242,9 @@ public record UpdateUserEmailRequest
     /// Novo email do usuário
     /// </summary>
     /// <example>newemail@example.com</example>
+    [Required(ErrorMessage = "Email é obrigatório")]
+    [EmailAddress(ErrorMessage = "Email inválido")]
+    [StringLength(200, ErrorMessage = "Email deve ter no máximo 200 caracteres")]
     public string Email { get; init; } = string.Empty;
 }
 
@@ -245,5 +257,7 @@ public record UpdateUserUsernameRequest
     /// Novo username do usuário
     /// </summary>
     /// <example>newusername</example>
+    [Required(ErrorMessage = "Username é obrigatório")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Username deve ter entre 3 e 100 caracteres")]
     public string Username { get; init; } = string.Empty;
 }

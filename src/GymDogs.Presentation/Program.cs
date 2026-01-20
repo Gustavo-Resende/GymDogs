@@ -6,6 +6,7 @@ using GymDogs.Infrastructure.Services;
 using GymDogs.Presentation.Configuration;
 using GymDogs.Presentation.Middleware;
 using GymDogs.Presentation.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymDogs.Presentation
@@ -24,7 +25,27 @@ namespace GymDogs.Presentation
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly));
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                    {
+                        var errors = context.ModelState
+                            .Where(x => x.Value?.Errors.Count > 0)
+                            .SelectMany(x => x.Value!.Errors.Select(e => new
+                            {
+                                Identifier = x.Key,
+                                ErrorMessage = e.ErrorMessage
+                            }));
+
+                        return new BadRequestObjectResult(new
+                        {
+                            status = "Invalid",
+                            errors = errors
+                        });
+                    };
+                });
+
             builder.Services.AddOpenApi();
             builder.Services.AddSwaggerConfiguration();
 

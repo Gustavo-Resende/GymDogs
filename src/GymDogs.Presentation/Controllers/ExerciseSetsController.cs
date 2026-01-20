@@ -4,6 +4,7 @@ using GymDogs.Application.ExerciseSets.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -152,18 +153,23 @@ public record AddExerciseSetRequest
     /// Número da série (opcional, será auto-incrementado se não fornecido)
     /// </summary>
     /// <example>1</example>
+    [Range(1, int.MaxValue, ErrorMessage = "SetNumber deve ser maior que 0")]
     public int? SetNumber { get; init; }
 
     /// <summary>
     /// Número de repetições (entre 1 e 1000)
     /// </summary>
     /// <example>12</example>
+    [Required(ErrorMessage = "Reps é obrigatório")]
+    [Range(1, 1000, ErrorMessage = "Reps deve estar entre 1 e 1000")]
     public int Reps { get; init; }
 
     /// <summary>
     /// Peso utilizado em kg (entre 0 e 10000)
     /// </summary>
     /// <example>80.5</example>
+    [Required(ErrorMessage = "Weight é obrigatório")]
+    [Range(0, 10000, ErrorMessage = "Weight deve estar entre 0 e 10000 kg")]
     public decimal Weight { get; init; }
 }
 
@@ -176,11 +182,13 @@ public record UpdateExerciseSetRequest
     /// Novo número de repetições (opcional)
     /// </summary>
     /// <example>15</example>
+    [Range(1, 1000, ErrorMessage = "Reps deve estar entre 1 e 1000")]
     public int? Reps { get; init; }
 
     /// <summary>
     /// Novo peso utilizado em kg (opcional)
     /// </summary>
     /// <example>85.0</example>
+    [Range(0, 10000, ErrorMessage = "Weight deve estar entre 0 e 10000 kg")]
     public decimal? Weight { get; init; }
 }

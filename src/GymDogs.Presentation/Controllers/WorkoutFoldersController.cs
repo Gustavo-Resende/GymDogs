@@ -4,6 +4,7 @@ using GymDogs.Application.WorkoutFolders.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -178,18 +179,22 @@ public record CreateWorkoutFolderRequest
     /// Nome da pasta de treino (máximo 200 caracteres)
     /// </summary>
     /// <example>Costas</example>
+    [Required(ErrorMessage = "Name é obrigatório")]
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Name deve ter entre 1 e 200 caracteres")]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// Descrição da pasta de treino (opcional)
     /// </summary>
     /// <example>Treino focado em desenvolvimento das costas</example>
+    [StringLength(1000, ErrorMessage = "Description deve ter no máximo 1000 caracteres")]
     public string? Description { get; init; }
 
     /// <summary>
     /// Ordem de exibição da pasta (padrão: 0)
     /// </summary>
     /// <example>1</example>
+    [Range(0, int.MaxValue, ErrorMessage = "Order deve ser maior ou igual a 0")]
     public int Order { get; init; } = 0;
 }
 
@@ -202,12 +207,14 @@ public record UpdateWorkoutFolderRequest
     /// Novo nome da pasta de treino
     /// </summary>
     /// <example>Costas e Bíceps</example>
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Name deve ter entre 1 e 200 caracteres")]
     public string? Name { get; init; }
 
     /// <summary>
     /// Nova descrição da pasta de treino
     /// </summary>
     /// <example>Treino completo de costas e bíceps</example>
+    [StringLength(1000, ErrorMessage = "Description deve ter no máximo 1000 caracteres")]
     public string? Description { get; init; }
 }
 
@@ -220,5 +227,7 @@ public record UpdateWorkoutFolderOrderRequest
     /// Nova ordem de exibição
     /// </summary>
     /// <example>2</example>
+    [Required(ErrorMessage = "Order é obrigatório")]
+    [Range(0, int.MaxValue, ErrorMessage = "Order deve ser maior ou igual a 0")]
     public int Order { get; init; }
 }
