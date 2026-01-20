@@ -3,6 +3,7 @@ using GymDogs.Application.Common;
 using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
 using GymDogs.Infrastructure.Services;
+using GymDogs.Presentation.Configuration;
 using GymDogs.Presentation.Middleware;
 using GymDogs.Presentation.Services;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ namespace GymDogs.Presentation
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerConfiguration();
 
             builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -39,16 +40,8 @@ namespace GymDogs.Presentation
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/openapi/v1.json", "API v1");
-                });
-            }
+            // Configure the HTTP request pipeline
+            app.UseSwaggerConfiguration();
 
             app.UseHttpsRedirection();
 
