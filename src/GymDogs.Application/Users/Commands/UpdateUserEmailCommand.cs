@@ -33,15 +33,6 @@ internal class UpdateUserEmailCommandHandler : ICommandHandler<UpdateUserEmailCo
             return Result<GetUserDto>.NotFound("User ID is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Email))
-        {
-            return Result<GetUserDto>.Invalid(
-                new List<ValidationError>
-                {
-                    new() { Identifier = "Email", ErrorMessage = "Email is required." }
-                });
-        }
-
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
@@ -49,7 +40,7 @@ internal class UpdateUserEmailCommandHandler : ICommandHandler<UpdateUserEmailCo
             return Result<GetUserDto>.NotFound($"User with ID {request.Id} not found.");
         }
 
-        var emailNormalized = request.Email.Trim().ToLowerInvariant();
+        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
         var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
             new GetUserByEmailSpec(emailNormalized),
             cancellationToken);

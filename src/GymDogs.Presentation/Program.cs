@@ -1,7 +1,10 @@
 using GymDogs.Application;
+using GymDogs.Application.Common;
 using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
 using GymDogs.Infrastructure.Services;
+using GymDogs.Presentation.Middleware;
+using GymDogs.Presentation.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymDogs.Presentation
@@ -30,8 +33,11 @@ namespace GymDogs.Presentation
             builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
 
+            builder.Services.AddScoped<IExceptionToResultMapper, ExceptionToResultMapper>();
 
             var app = builder.Build();
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

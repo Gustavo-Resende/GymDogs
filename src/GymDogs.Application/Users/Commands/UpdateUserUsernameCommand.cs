@@ -33,15 +33,6 @@ internal class UpdateUserUsernameCommandHandler : ICommandHandler<UpdateUserUser
             return Result<GetUserDto>.NotFound("User ID is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Username))
-        {
-            return Result<GetUserDto>.Invalid(
-                new List<ValidationError>
-                {
-                    new() { Identifier = "Username", ErrorMessage = "Username is required." }
-                });
-        }
-
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
@@ -49,7 +40,7 @@ internal class UpdateUserUsernameCommandHandler : ICommandHandler<UpdateUserUser
             return Result<GetUserDto>.NotFound($"User with ID {request.Id} not found.");
         }
 
-        var usernameNormalized = request.Username.Trim();
+        var usernameNormalized = request.Username?.Trim() ?? string.Empty;
         var existingUserByUsername = await _userRepository.FirstOrDefaultAsync(
             new GetUserByUsernameSpec(usernameNormalized),
             cancellationToken);

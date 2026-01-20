@@ -42,7 +42,7 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
 
         if (!string.IsNullOrWhiteSpace(request.Username))
         {
-            var usernameNormalized = request.Username.Trim();
+            var usernameNormalized = request.Username?.Trim() ?? string.Empty;
             var existingUserByUsername = await _userRepository.FirstOrDefaultAsync(
                 new GetUserByUsernameSpec(usernameNormalized),
                 cancellationToken);
@@ -57,7 +57,7 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
 
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
-            var emailNormalized = request.Email.Trim().ToLowerInvariant();
+            var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
             var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
                 new GetUserByEmailSpec(emailNormalized),
                 cancellationToken);

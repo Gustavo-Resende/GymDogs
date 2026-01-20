@@ -35,21 +35,8 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
         CreateUserCommand request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) ||
-            string.IsNullOrWhiteSpace(request.Email) ||
-            string.IsNullOrWhiteSpace(request.Password))
-        {
-            return Result<CreateUserDto>.Invalid(
-                new List<ValidationError>
-                {
-                    new() { Identifier = "Username", ErrorMessage = "Username is required." },
-                    new() { Identifier = "Email", ErrorMessage = "Email is required." },
-                    new() { Identifier = "Password", ErrorMessage = "Password is required." }
-                });
-        }
-
-        var emailNormalized = request.Email.Trim().ToLowerInvariant();
-        var usernameNormalized = request.Username.Trim();
+        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+        var usernameNormalized = request.Username?.Trim() ?? string.Empty;
 
         var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
             new GetUserByEmailSpec(emailNormalized),
