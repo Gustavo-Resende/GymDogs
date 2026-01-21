@@ -4,7 +4,6 @@ using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
 using GymDogs.Infrastructure.Services;
 using GymDogs.Presentation.Configuration;
-using GymDogs.Presentation.Middleware;
 using GymDogs.Presentation.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -24,9 +23,11 @@ namespace GymDogs.Presentation
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+            // Configuration of DbContext with PostgreSQL
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
+            // MediatR Configuration
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly));
 
@@ -78,12 +79,6 @@ namespace GymDogs.Presentation
                     };
                 });
 
-            // Configuração do OpenAPI para Scalar com suporte a JWT Bearer
-            builder.Services.AddOpenApi();
-            
-            // Registra o transformer como serviço singleton
-            builder.Services.AddSingleton<IOpenApiDocumentTransformer, JwtBearerOpenApiTransformer>();
-
             builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -93,25 +88,25 @@ namespace GymDogs.Presentation
 
             builder.Services.AddScoped<IExceptionToResultMapper, ExceptionToResultMapper>();
 
+            // Configuration of OpenAPI with transformer for JWT Bearer
+            builder.Services.AddOpenApi(options =>
+            {
+                options.AddDocumentTransformer<JwtBearerOpenApiTransformer>();
+            });
+
             var app = builder.Build();
-
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-            // Middleware para adicionar segurança JWT ao documento OpenAPI
-            app.UseMiddleware<OpenApiSecurityMiddleware>();
 
             app.UseHttpsRedirection();
 
-            app.UseAuthentication(); // IMPORTANTE: Deve vir antes de UseAuthorization
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            // Configuração do Scalar para documentação da API
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference(options =>
                 {
-                    options.WithTitle("GymDogs API - Documentação");
+                    options.WithTitle("GymDogs API - Documentation");
                 });
             }
 

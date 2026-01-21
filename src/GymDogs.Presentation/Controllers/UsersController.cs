@@ -28,34 +28,6 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Cria um novo usuário no sistema
-    /// </summary>
-    /// <param name="request">Dados do usuário a ser criado</param>
-    /// <param name="cancellationToken">Token de cancelamento</param>
-    /// <returns>Usuário criado com sucesso</returns>
-    /// <response code="201">Usuário criado com sucesso</response>
-    /// <response code="400">Dados inválidos fornecidos</response>
-    /// <response code="409">Email ou username já existe no sistema</response>
-    [HttpPost]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(CreateUserDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<CreateUserDto>> CreateUser(
-        [FromBody] CreateUserRequest request,
-        CancellationToken cancellationToken)
-    {
-        var command = new CreateUserCommand(
-            request.Username,
-            request.Email,
-            request.Password
-        );
-
-        var result = await _mediator.Send(command, cancellationToken);
-        return result.ToActionResult();
-    }
-
-    /// <summary>
     /// Obtém um usuário pelo ID
     /// </summary>
     /// <param name="id">ID do usuário</param>
@@ -202,38 +174,6 @@ public class UsersController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
-}
-
-/// <summary>
-/// Request DTO para criação de usuário
-/// </summary>
-public record CreateUserRequest
-{
-    /// <summary>
-    /// Nome de usuário único (máximo 100 caracteres)
-    /// </summary>
-    /// <example>johndoe</example>
-    [Required(ErrorMessage = "Username é obrigatório")]
-    [StringLength(100, MinimumLength = 3, ErrorMessage = "Username deve ter entre 3 e 100 caracteres")]
-    public string Username { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Email único do usuário
-    /// </summary>
-    /// <example>john@example.com</example>
-    [Required(ErrorMessage = "Email é obrigatório")]
-    [EmailAddress(ErrorMessage = "Email inválido")]
-    [StringLength(200, ErrorMessage = "Email deve ter no máximo 200 caracteres")]
-    public string Email { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Senha do usuário (será hasheada antes de salvar)
-    /// </summary>
-    /// <example>SecurePassword123!</example>
-    [Required(ErrorMessage = "Senha é obrigatória")]
-    [MinLength(6, ErrorMessage = "Senha deve ter no mínimo 6 caracteres")]
-    [MaxLength(100, ErrorMessage = "Senha deve ter no máximo 100 caracteres")]
-    public string Password { get; init; } = string.Empty;
 }
 
 /// <summary>
