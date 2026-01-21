@@ -6,8 +6,13 @@ using GymDogs.Infrastructure.Services;
 using GymDogs.Presentation.Configuration;
 using GymDogs.Presentation.Middleware;
 using GymDogs.Presentation.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
 
 namespace GymDogs.Presentation
 {
@@ -24,6 +29,33 @@ namespace GymDogs.Presentation
 
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly));
+
+            // JWT Authentication Configuration
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+            var secretKey = jwtSettings["SecretKey"] 
+                ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidAudience = jwtSettings["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(secretKey))
+                };
+            });
+
+            builder.Services.AddAuthorization();
 
             builder.Services.AddControllers()
                 .ConfigureApiBehaviorOptions(options =>
@@ -46,10 +78,14 @@ namespace GymDogs.Presentation
                     };
                 });
 
+            // Configuração do OpenAPI para Scalar com suporte a JWT Bearer
             builder.Services.AddOpenApi();
-            builder.Services.AddSwaggerConfiguration();
+            
+            // Registra o transformer como serviço singleton
+            builder.Services.AddSingleton<IOpenApiDocumentTransformer, JwtBearerOpenApiTransformer>();
 
             builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+            builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
@@ -61,12 +97,23 @@ namespace GymDogs.Presentation
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-            // Configure the HTTP request pipeline
-            app.UseSwaggerConfiguration();
+            // Middleware para adicionar segurança JWT ao documento OpenAPI
+            app.UseMiddleware<OpenApiSecurityMiddleware>();
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication(); // IMPORTANTE: Deve vir antes de UseAuthorization
             app.UseAuthorization();
+
+            // Configuração do Scalar para documentação da API
+            if (app.Environment.IsDevelopment())
+            {
+                app.MapOpenApi();
+                app.MapScalarApiReference(options =>
+                {
+                    options.WithTitle("GymDogs API - Documentação");
+                });
+            }
 
             app.MapControllers();
 
