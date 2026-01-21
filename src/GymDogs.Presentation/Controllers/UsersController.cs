@@ -4,6 +4,7 @@ using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -16,6 +17,7 @@ namespace GymDogs.Presentation.Controllers;
 [Route("api/users")]
 [Produces("application/json")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -35,6 +37,7 @@ public class UsersController : ControllerBase
     /// <response code="400">Dados inválidos fornecidos</response>
     /// <response code="409">Email ou username já existe no sistema</response>
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(CreateUserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]

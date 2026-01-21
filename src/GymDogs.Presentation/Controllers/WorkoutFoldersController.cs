@@ -3,6 +3,7 @@ using GymDogs.Application.WorkoutFolders.Dtos;
 using GymDogs.Application.WorkoutFolders.Queries;
 using GymDogs.Presentation.Extensions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -15,6 +16,7 @@ namespace GymDogs.Presentation.Controllers;
 [Route("api/profiles/{profileId}/workout-folders")]
 [Produces("application/json")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+[Authorize]
 public class WorkoutFoldersController : ControllerBase
 {
     private readonly IMediator _mediator;
