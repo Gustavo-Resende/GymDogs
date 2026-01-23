@@ -5,13 +5,16 @@ using System.Reflection;
 namespace GymDogs.Presentation.Extensions;
 
 /// <summary>
-/// Extensions to convert Result<T> to appropriate HTTP responses
+/// Extensions to convert Result to appropriate HTTP responses
 /// </summary>
 public static class ResultExtensions
 {
     /// <summary>
-    /// Converts a Result<T> to an appropriate ActionResult
+    /// Converts a Result to an appropriate ActionResult
     /// </summary>
+    /// <typeparam name="T">The type of the result value</typeparam>
+    /// <param name="result">The result to convert</param>
+    /// <returns>An ActionResult</returns>
     public static ActionResult<T> ToActionResult<T>(this Result<T> result) where T : class
     {
         return result.Status switch

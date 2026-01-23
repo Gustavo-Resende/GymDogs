@@ -43,11 +43,18 @@ internal sealed class JwtBearerOpenApiTransformer : IOpenApiDocumentTransformer
             // Apply it as a requirement for all operations
             foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations))
             {
-                operation.Value.Security ??= [];
-                operation.Value.Security.Add(new OpenApiSecurityRequirement
+                if (operation.Value != null)
                 {
-                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-                });
+                    operation.Value.Security ??= [];
+                    var securitySchemeRef = new OpenApiSecuritySchemeReference("Bearer", document);
+                    if (securitySchemeRef != null)
+                    {
+                        operation.Value.Security.Add(new OpenApiSecurityRequirement
+                        {
+                            [securitySchemeRef] = []
+                        });
+                    }
+                }
             }
         }
     }
