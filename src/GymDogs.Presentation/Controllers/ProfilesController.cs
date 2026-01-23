@@ -37,12 +37,14 @@ public class ProfilesController : ControllerBase
     /// <response code="404">Perfil não encontrado</response>
     [HttpGet("{profileId}")]
     [ProducesResponseType(typeof(GetProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetProfileDto>> GetProfileById(
         [FromRoute] Guid profileId,
         CancellationToken cancellationToken)
     {
-        var query = new GetProfileByIdQuery(profileId);
+        var currentUserId = HttpContext.GetUserId();
+        var query = new GetProfileByIdQuery(profileId, currentUserId);
         var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }
@@ -57,12 +59,14 @@ public class ProfilesController : ControllerBase
     /// <response code="404">Perfil não encontrado</response>
     [HttpGet("user/{userId}")]
     [ProducesResponseType(typeof(GetProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetProfileDto>> GetProfileByUserId(
         [FromRoute] Guid userId,
         CancellationToken cancellationToken)
     {
-        var query = new GetProfileByUserIdQuery(userId);
+        var currentUserId = HttpContext.GetUserId();
+        var query = new GetProfileByUserIdQuery(userId, currentUserId);
         var result = await _mediator.Send(query, cancellationToken);
         return result.ToActionResult();
     }

@@ -8,7 +8,7 @@ using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Queries;
 
-public record GetProfileByIdQuery(Guid ProfileId) : IQuery<Result<GetProfileDto>>;
+public record GetProfileByIdQuery(Guid ProfileId, Guid? CurrentUserId = null) : IQuery<Result<GetProfileDto>>;
 
 internal class GetProfileByIdQueryHandler : IQueryHandler<GetProfileByIdQuery, Result<GetProfileDto>>
 {
@@ -35,6 +35,11 @@ internal class GetProfileByIdQueryHandler : IQueryHandler<GetProfileByIdQuery, R
         if (profile == null)
         {
             return Result<GetProfileDto>.NotFound($"Profile with ID {request.ProfileId} not found.");
+        }
+
+        if (!profile.IsVisibleTo(request.CurrentUserId))
+        {
+            return Result<GetProfileDto>.Forbidden("You do not have permission to view this profile.");
         }
 
         return Result.Success(profile.ToGetProfileDto());
