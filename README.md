@@ -1,75 +1,210 @@
 # GymDogs
 
-## 🎯 Objetivo do Sistema
+API REST para gerenciamento e acompanhamento de treinos de academia, desenvolvida com Clean Architecture, CQRS e ASP.NET Core.
+
+---
+
+## 🎯 Sobre o Projeto
 
 O **GymDogs** é uma aplicação para gerenciamento e acompanhamento de treinos de academia. O sistema permite que usuários organizem seus exercícios em pastas personalizadas, registrem séries com pesos e repetições, e compartilhem seus treinos com outros usuários através de perfis públicos ou privados.
 
-### Principais Funcionalidades
+### 🌟 Principais Funcionalidades
 
-- **Gestão de Perfis**: Cada usuário possui um perfil com controle de visibilidade (público/privado)
-- **Organização por Pastas**: Crie pastas de treino personalizadas (ex: "Costas", "Peito", "Pernas")
-- **Catálogo de Exercícios**: Sistema centralizado de exercícios que podem ser reutilizados
-- **Registro de Séries**: Controle detalhado de séries, repetições e cargas levantadas
-- **Acompanhamento de Progresso**: Histórico completo de treinos para análise de evolução
+- **👤 Gestão de Perfis**: Cada usuário possui um perfil com controle de visibilidade (público/privado)
+- **📁 Organização por Pastas**: Crie pastas de treino personalizadas (ex: "Costas", "Peito", "Pernas")
+- **💪 Catálogo de Exercícios**: Sistema centralizado de exercícios que podem ser reutilizados
+- **📊 Registro de Séries**: Controle detalhado de séries, repetições e cargas levantadas
+- **📈 Acompanhamento de Progresso**: Histórico completo de treinos para análise de evolução
+- **🔐 Autenticação Segura**: Sistema de login com JWT e refresh tokens
+- **👥 Compartilhamento**: Visualize perfis públicos de outros usuários e seus treinos
+
+### 🎨 Funcionalidades Futuras (Roadmap)
+
+- Sistema de grupos para compartilhamento de treinos
+- Feed de atividades (exercícios recentes de perfis que você segue)
+- Gráficos e estatísticas de progresso
+- Fotos e vídeos de exercícios
+- Sistema de notificações
+- Planejamento de treinos semanais/mensais
 
 ---
 
-## 📋 Regras de Negócio
+## 🚀 Como Iniciar o Projeto
+
+### 📋 Pré-requisitos
+
+- **Docker Desktop** (Windows/Mac) ou **Docker Engine + Docker Compose** (Linux)
+- **Portas disponíveis**: 8080 (API), 5051 (pgAdmin), 5432 (PostgreSQL)
+
+### ⚡ Início Rápido
+
+#### Passo 1: Clone o repositório
+
+```bash
+git clone <url-do-repositorio>
+cd GymDogs
+```
+
+#### Passo 2: Execute o script de inicialização
+
+**Windows (PowerShell):**
+```powershell
+.\docker-init.ps1
+```
+
+**Linux/Mac:**
+```bash
+chmod +x docker-init.sh
+./docker-init.sh
+```
+
+#### O que o script faz automaticamente:
+
+✅ Cria arquivo `.env` se não existir (a partir de `env.example`)  
+✅ Inicia todos os containers Docker (PostgreSQL, pgAdmin, API)  
+✅ Aguarda PostgreSQL ficar pronto  
+✅ Executa migrations do banco de dados  
+✅ Configura tudo automaticamente  
+
+#### Passo 3: Acesse os serviços
+
+Após o script concluir, você terá acesso a:
+
+- **API**: http://localhost:8080
+- **Swagger/OpenAPI**: http://localhost:8080/scalar/v1 (em desenvolvimento)
+- **pgAdmin**: http://localhost:5051
+  - Email: `admin@gymdogs.com` (ou o valor do `PGADMIN_EMAIL` no `.env`)
+  - Senha: `admin` (ou o valor do `PGADMIN_PASSWORD` no `.env`)
+
+### 🔧 Configuração de Secrets (Opcional)
+
+Se você quiser personalizar os secrets:
+
+#### 1. Crie o arquivo `.env`
+
+```bash
+# Copiar template
+cp env.example .env
+```
+
+#### 2. Edite o arquivo `.env`
+
+**Windows:**
+```powershell
+notepad .env
+```
+
+**Linux/Mac:**
+```bash
+nano .env
+```
+
+#### 3. Personalize os valores
+
+```env
+# Database Configuration
+POSTGRES_DB=GymDogsDb
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=sua_senha_segura_aqui
+
+# pgAdmin Configuration
+PGADMIN_EMAIL=seu_email@exemplo.com
+PGADMIN_PASSWORD=sua_senha_pgadmin_aqui
+
+# JWT Configuration
+JWT_SECRET_KEY=SuaChaveSecretaSuperSeguraComPeloMenos32CaracteresParaHS256
+JWT_ISSUER=GymDogs
+JWT_AUDIENCE=GymDogsUsers
+JWT_ACCESS_TOKEN_EXPIRATION_MINUTES=15
+JWT_REFRESH_TOKEN_EXPIRATION_DAYS=7
+```
+
+**⚠️ SEGURANÇA:**
+- O arquivo `.env` está no `.gitignore` e **NÃO será commitado**
+- Nunca commite o arquivo `.env` com secrets reais
+- Em produção, use Docker Secrets ou Azure Key Vault
+
+#### 4. Reinicie os containers
+
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+### 📊 Configurar pgAdmin (Opcional)
+
+1. Acesse http://localhost:5051
+2. Faça login com as credenciais do `.env`
+3. Clique com botão direito em **"Servers"** → **"Register"** → **"Server"**
+4. Na aba **"General"**:
+   - Name: `GymDogs DB`
+5. Na aba **"Connection"**:
+   - Host name/address: `postgres`
+   - Port: `5432`
+   - Maintenance database: `GymDogsDb` (ou o valor do `POSTGRES_DB` no `.env`)
+   - Username: `postgres` (ou o valor do `POSTGRES_USER` no `.env`)
+   - Password: `postgres` (ou o valor do `POSTGRES_PASSWORD` no `.env`)
+   - Marque **"Save password"**
+6. Clique em **"Save"**
+
+### 🛠️ Comandos Úteis
+
+```bash
+# Ver logs da API
+docker-compose logs -f gymdogs-api
+
+# Parar todos os serviços
+docker-compose down
+
+# Parar e remover volumes (limpar dados)
+docker-compose down -v
+
+# Reiniciar apenas a API
+docker-compose restart gymdogs-api
+
+# Ver status dos containers
+docker-compose ps
+
+# Executar migrations manualmente (se necessário)
+.\docker-migrate.ps1  # Windows
+./docker-migrate.sh   # Linux/Mac
+```
+
+---
+
+## 📋 Regras de Negócio Principais
 
 ### Usuário (User)
 
-- Cada usuário deve ter um **username** único e obrigatório (máximo 100 caracteres)
-- Cada usuário deve ter um **email** único e obrigatório (máximo 255 caracteres)
-- A senha deve ser armazenada como **hash** usando BCrypt
+- Cada usuário possui **username** único e **email** único
+- Senha armazenada como **hash** usando BCrypt
 - Ao criar um usuário, um **perfil é automaticamente criado** (relacionamento 1:1)
-- Username e email são normalizados (trim e lower case para email) antes de serem salvos
+- Sistema de **roles**: Admin e User
 
 ### Perfil (Profile)
 
-- Um perfil é **automaticamente criado** quando um usuário é cadastrado
-- Cada perfil está vinculado a **exatamente um usuário** (relacionamento 1:1)
-- O perfil possui **visibilidade** que pode ser:
-  - **Público**: Visível para todos os usuários
-  - **Privado**: Visível apenas para o próprio usuário
-- O **displayName** é obrigatório (máximo 200 caracteres), padrão é string vazia
-- A **bio** é opcional (máximo 1000 caracteres)
-- Um perfil pode ter **múltiplas pastas de treino** (relacionamento 1:N)
+- Criado automaticamente quando um usuário é cadastrado
+- Possui **visibilidade**: Público (todos podem ver) ou Privado (apenas o dono)
+- Pode ter **múltiplas pastas de treino**
 
 ### Pasta de Treino (WorkoutFolder)
 
-- Pertence a **um perfil específico** (relacionamento N:1)
-- Possui um **nome** obrigatório (máximo 200 caracteres)
-- Possui uma **descrição** opcional
-- Possui um campo **Order** para controlar a ordem de exibição (deve ser ≥ 0)
-- Uma pasta pode conter **múltiplos exercícios** através do relacionamento com FolderExercise
+- Pertence a um perfil específico
+- Possui nome, descrição opcional e ordem de exibição
+- Pode conter múltiplos exercícios
 
 ### Exercício (Exercise)
 
-- Exercícios são **criados no catálogo global** e podem ser reutilizados
-- Possui um **nome** obrigatório (máximo 200 caracteres)
-- Possui uma **descrição** opcional (máximo 1000 caracteres)
-- Um exercício pode estar presente em **múltiplas pastas de treino** através de FolderExercise
-
-### Exercício na Pasta (FolderExercise)
-
-- Representa a **associação de um exercício a uma pasta de treino**
-- Previne duplicação: o **mesmo exercício não pode ser adicionado duas vezes na mesma pasta**
-- Possui um campo **Order** para controlar a ordem dos exercícios dentro da pasta (deve ser ≥ 0)
-- Um FolderExercise pode ter **múltiplas séries** (relacionamento 1:N com ExerciseSet)
+- Criado no **catálogo global** e pode ser reutilizado em múltiplas pastas
+- Possui nome e descrição opcional
+- Apenas **Admin** pode criar/editar/deletar exercícios
 
 ### Série (ExerciseSet)
 
-- Representa **uma série executada** de um exercício em uma pasta
-- Pertence a **um FolderExercise específico** (relacionamento N:1)
-- Possui um **SetNumber** que identifica o número da série (deve ser > 0)
-  - Se não fornecido, o sistema **calcula automaticamente** o próximo número disponível
-- **Reps** (repetições) deve ser entre 1 e 1000 (obrigatório, deve ser > 0)
-- **Weight** (peso) deve ser entre 0 e 10.000 kg (deve ser ≥ 0)
-- Mantém **histórico completo** de todas as séries executadas para acompanhamento de progresso
-
----
-
-## 🏗️ Estrutura de Entidades
+- Representa uma série executada de um exercício
+- Possui número da série, repetições e peso
+- Sistema calcula automaticamente o número da série se não fornecido
+- Mantém **histórico completo** para acompanhamento de progresso
 
 ### Hierarquia do Sistema
 
@@ -92,100 +227,144 @@ User (1) ────── (1) Profile
                 ExerciseSet
 ```
 
-### Relacionamentos
+---
 
-1. **User ↔ Profile**: Relacionamento 1:1
-   - Ao deletar um User, o Profile é deletado em cascata
-   - Um User sempre possui um Profile
+## 🔐 Segurança
 
-2. **Profile ↔ WorkoutFolder**: Relacionamento 1:N
-   - Um Profile pode ter múltiplas WorkoutFolders
-   - Ao deletar um Profile, todas as WorkoutFolders são deletadas em cascata
+### Autenticação e Autorização
 
-3. **WorkoutFolder ↔ FolderExercise**: Relacionamento 1:N
-   - Uma WorkoutFolder pode ter múltiplos FolderExercises
-   - Ao deletar uma WorkoutFolder, todos os FolderExercises são deletados em cascata
+- **JWT Authentication**: Tokens JWT para autenticação
+- **Refresh Tokens**: Renovação automática de tokens
+- **Role-Based Authorization**: Sistema de roles (Admin/User)
+- **Property-Based Authorization**: Usuários só podem modificar seus próprios recursos
+- **Password Hashing**: Senhas armazenadas com BCrypt
 
-4. **Exercise ↔ FolderExercise**: Relacionamento 1:N
-   - Um Exercise pode estar em múltiplos FolderExercises (reutilização)
-   - Ao deletar um Exercise, todos os FolderExercises relacionados são deletados em cascata
+### Boas Práticas Implementadas
 
-5. **FolderExercise ↔ ExerciseSet**: Relacionamento 1:N
-   - Um FolderExercise pode ter múltiplas ExerciseSets (histórico de séries)
-   - Ao deletar um FolderExercise, todas as ExerciseSets são deletadas em cascata
+- ✅ Secrets em arquivo `.env` (não versionado)
+- ✅ Validação de entrada em todas as requisições
+- ✅ Proteção contra SQL Injection (EF Core)
+- ✅ Error handling global
+- ✅ Visibilidade de perfis (público/privado)
 
 ---
 
-## 🔄 Fluxo de Uso
+## 🧪 Testando a API
 
-### Cenário 1: Criação de Usuário e Primeiro Treino
+### 1. Verificar se está funcionando
 
-1. **Criar Usuário**
-   - Sistema cria automaticamente um Profile vinculado
-   - Profile inicialmente é **público** por padrão
+Acesse: http://localhost:8080/scalar/v1
 
-2. **Criar Pasta de Treino**
-   - Usuário cria uma WorkoutFolder (ex: "Treino A - Costas")
-   - Define nome, descrição opcional e ordem
+Você deve ver a documentação Swagger/OpenAPI interativa.
 
-3. **Adicionar Exercícios ao Catálogo** (se ainda não existirem)
-   - Criar Exercise no catálogo global (ex: "Puxada Frontal")
-   - Pode ser reutilizado em outras pastas
+### 2. Exemplos de Requisições
 
-4. **Adicionar Exercício à Pasta**
-   - Criar FolderExercise associando Exercise à WorkoutFolder
-   - Define a ordem do exercício na pasta
+#### Registrar um usuário
 
-5. **Registrar Séries**
-   - Criar ExerciseSet para cada série executada
-   - Sistema calcula automaticamente o SetNumber se não fornecido
-   - Registra reps e weight de cada série
+```bash
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
 
-### Cenário 2: Visualização de Perfil Público
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "SenhaSegura123!"
+}
+```
 
-- Usuários podem **visualizar perfis públicos** de outros usuários
-- Perfis privados são visíveis apenas para o próprio usuário
-- Ao visualizar um perfil público, é possível ver:
-  - Pastas de treino do usuário
-  - Exercícios em cada pasta
-  - Histórico de séries executadas
+#### Fazer login
 
-### Cenário 3: Acompanhamento de Progresso
+```bash
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
 
-- Todas as **ExerciseSets** são mantidas como histórico
-- Permite comparar séries ao longo do tempo
-- Facilita análise de evolução de cargas e repetições
+{
+  "email": "john@example.com",
+  "password": "SenhaSegura123!"
+}
+```
+
+**Resposta:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "abc123...",
+  "userId": "guid-aqui",
+  "username": "johndoe",
+  "email": "john@example.com",
+  "expiresAt": "2026-01-23T10:30:00Z",
+  "refreshTokenExpiresAt": "2026-01-30T10:30:00Z",
+  "role": "User"
+}
+```
+
+#### Usar o token em requisições autenticadas
+
+```bash
+GET http://localhost:8080/api/profiles/{profileId}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Refresh Token
+
+```bash
+POST http://localhost:8080/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "abc123..."
+}
+```
 
 ---
 
-## 🛡️ Validações e Proteções
+## 🆘 Troubleshooting
 
-### Domain Layer (GuardClauses)
+### Porta já em uso
 
-Todas as entidades utilizam **Ardalis.GuardClauses** para garantir invariantes:
+```bash
+# Verificar o que está usando a porta
+# Windows
+netstat -ano | findstr :8080
 
-- **Campos obrigatórios**: Validados contra null/whitespace
-- **Limites de tamanho**: Validados contra tamanho máximo permitido
-- **Valores numéricos**: Validados contra negativos ou fora de range
-- **Enums**: Validados contra valores inválidos
-- **Guids**: Validados contra valores vazios (Guid.Empty)
+# Linux/Mac
+lsof -i :8080
 
-### Application Layer
+# Alterar porta no docker-compose.yml se necessário
+```
 
-- **Validação de duplicação**: Verifica se email/username já existem antes de criar usuário
-- **Validação de existência**: Verifica se entidades relacionadas existem antes de criar associações
-- **Prevenção de duplicação**: Impede adicionar o mesmo exercício duas vezes na mesma pasta
-- **Normalização de dados**: Aplica trim e lower case quando necessário
+### PostgreSQL não inicia
 
-### Error Handling
+```bash
+# Ver logs
+docker-compose logs postgres
 
-- **Middleware global** captura exceções e retorna respostas estruturadas
-- **Domain exceptions** são convertidas para `Ardalis.Result` formatado
-- Respostas de erro seguem padrão consistente com status HTTP apropriado
+# Verificar status
+docker-compose ps
+
+# Reiniciar
+docker-compose restart postgres
+```
+
+### Migrations não executam
+
+```bash
+# Executar migrations manualmente
+.\docker-migrate.ps1  # Windows
+./docker-migrate.sh   # Linux/Mac
+```
+
+### Erro de conexão com banco
+
+Verifique se:
+- ✅ PostgreSQL está rodando (`docker-compose ps`)
+- ✅ Connection string está correta no `.env`
+- ✅ Credenciais estão corretas
+- ✅ Banco de dados foi criado (migrations executadas)
 
 ---
 
-## 📊 Conceitos Arquiteturais
+## 🏗️ Arquitetura
 
 ### Clean Architecture
 
@@ -210,11 +389,76 @@ O sistema segue os princípios de **Clean Architecture** com separação clara d
 
 ---
 
-## 🎨 Funcionalidades Futuras (Roadmap)
+## 🔧 Tecnologias Utilizadas
 
-- Sistema de grupos para compartilhamento de treinos
-- Feed de atividades (exercícios recentes de perfis que você segue)
-- Gráficos e estatísticas de progresso
-- Fotos e vídeos de exercícios
-- Sistema de notificações
-- Planejamento de treinos semanais/mensais
+- **.NET 10.0** - Framework principal
+- **ASP.NET Core** - API REST
+- **PostgreSQL 16** - Banco de dados relacional
+- **Entity Framework Core** - ORM
+- **MediatR** - Implementação do padrão CQRS
+- **Ardalis.Result** - Padrão de retorno estruturado
+- **Ardalis.Specification** - Queries complexas e reutilizáveis
+- **JWT (JSON Web Tokens)** - Autenticação e autorização
+- **BCrypt** - Hash seguro de senhas
+- **Docker & Docker Compose** - Containerização
+- **Scalar** - Documentação interativa OpenAPI/Swagger
+
+---
+
+## 📖 Estrutura do Projeto
+
+```
+GymDogs/
+├── src/
+│   ├── GymDogs.Domain/          # Entidades e regras de negócio
+│   ├── GymDogs.Application/     # Casos de uso, DTOs, interfaces
+│   ├── GymDogs.Infrastructure/  # Persistência, serviços externos
+│   └── GymDogs.Presentation/    # API, controllers, middleware
+├── docker-compose.yml            # Configuração Docker Compose
+├── Dockerfile                    # Imagem Docker da API
+├── docker-init.ps1              # Script de inicialização (Windows)
+├── docker-init.sh               # Script de inicialização (Linux/Mac)
+├── docker-migrate.ps1           # Script de migrations (Windows)
+├── docker-migrate.sh            # Script de migrations (Linux/Mac)
+├── env.example                  # Template de variáveis de ambiente
+├── README.md                    # Este arquivo
+└── README.Docker.md             # Documentação detalhada do Docker
+```
+
+---
+
+## 📚 Documentação Adicional
+
+- **[README.Docker.md](./README.Docker.md)** - Guia completo de Docker e containerização
+- **API Documentation** - Acesse http://localhost:8080/scalar/v1 quando a API estiver rodando
+
+---
+
+## 👥 Contribuindo
+
+Contribuições são bem-vindas! Por favor:
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
+
+### Padrões de Código
+
+- Siga os princípios de Clean Architecture
+- Use CQRS para separar comandos e queries
+- Documente código complexo
+- Adicione testes quando possível
+
+---
+
+## 📝 Licença
+
+[Especificar licença aqui]
+
+---
+
+## 📧 Contato
+
+[Adicione informações de contato aqui]

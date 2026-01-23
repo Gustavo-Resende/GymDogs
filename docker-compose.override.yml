@@ -1,0 +1,6 @@
+services:
+  gymdogs-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src:/src
