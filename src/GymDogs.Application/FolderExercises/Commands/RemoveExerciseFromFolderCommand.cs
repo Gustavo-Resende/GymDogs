@@ -6,7 +6,7 @@ using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.FolderExercises.Commands;
 
-public record RemoveExerciseFromFolderCommand(Guid FolderExerciseId) : ICommand<Result>;
+public record RemoveExerciseFromFolderCommand(Guid FolderExerciseId, Guid? CurrentUserId = null) : ICommand<Result>;
 
 internal class RemoveExerciseFromFolderCommandHandler : ICommandHandler<RemoveExerciseFromFolderCommand, Result>
 {
@@ -37,6 +37,12 @@ internal class RemoveExerciseFromFolderCommandHandler : ICommandHandler<RemoveEx
         if (folderExercise == null)
         {
             return Result.NotFound($"FolderExercise with ID {request.FolderExerciseId} not found.");
+        }
+
+        // Property-based authorization: Users can only remove exercises from their own workout folders
+        if (!request.CurrentUserId.HasValue || folderExercise.WorkoutFolder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result.Forbidden("You can only remove exercises from your own workout folders.");
         }
 
         await _folderExerciseRepository.DeleteAsync(folderExercise, cancellationToken);

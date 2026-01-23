@@ -8,7 +8,7 @@ using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Commands;
 
-public record UpdateProfileCommand(Guid ProfileId, string? DisplayName, string? Bio)
+public record UpdateProfileCommand(Guid ProfileId, string? DisplayName, string? Bio, Guid? CurrentUserId)
     : ICommand<Result<GetProfileDto>>;
 
 internal class UpdateProfileCommandHandler : ICommandHandler<UpdateProfileCommand, Result<GetProfileDto>>
@@ -40,6 +40,12 @@ internal class UpdateProfileCommandHandler : ICommandHandler<UpdateProfileComman
         if (profile == null)
         {
             return Result<GetProfileDto>.NotFound($"Profile with ID {request.ProfileId} not found.");
+        }
+
+        // Property-based authorization: Users can only update their own profile
+        if (!request.CurrentUserId.HasValue || profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<GetProfileDto>.Forbidden("You can only update your own profile.");
         }
 
         profile.UpdateProfile(request.DisplayName, request.Bio);

@@ -8,7 +8,7 @@ using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Commands;
 
-public record UpdateProfileVisibilityCommand(Guid ProfileId, ProfileVisibilityDto Visibility)
+public record UpdateProfileVisibilityCommand(Guid ProfileId, ProfileVisibilityDto Visibility, Guid? CurrentUserId)
     : ICommand<Result<GetProfileDto>>;
 
 internal class UpdateProfileVisibilityCommandHandler : ICommandHandler<UpdateProfileVisibilityCommand, Result<GetProfileDto>>
@@ -40,6 +40,12 @@ internal class UpdateProfileVisibilityCommandHandler : ICommandHandler<UpdatePro
         if (profile == null)
         {
             return Result<GetProfileDto>.NotFound($"Profile with ID {request.ProfileId} not found.");
+        }
+
+        // Property-based authorization: Users can only update their own profile visibility
+        if (!request.CurrentUserId.HasValue || profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<GetProfileDto>.Forbidden("You can only update your own profile visibility.");
         }
 
         var visibility = request.Visibility.ToProfileVisibility();

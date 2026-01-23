@@ -40,6 +40,7 @@ public class FolderExercisesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(AddExerciseToFolderDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AddExerciseToFolderDto>> AddExerciseToFolder(
@@ -47,10 +48,12 @@ public class FolderExercisesController : ControllerBase
         [FromBody] AddExerciseToFolderRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = HttpContext.GetUserId();
         var command = new AddExerciseToFolderCommand(
             workoutFolderId,
             request.ExerciseId,
-            request.Order
+            request.Order,
+            currentUserId
         );
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
@@ -112,6 +115,7 @@ public class FolderExercisesController : ControllerBase
     [HttpPut("{folderExerciseId}/order")]
     [ProducesResponseType(typeof(GetFolderExerciseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetFolderExerciseDto>> UpdateFolderExerciseOrder(
         [FromRoute] Guid workoutFolderId,
@@ -119,7 +123,8 @@ public class FolderExercisesController : ControllerBase
         [FromBody] UpdateFolderExerciseOrderRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateFolderExerciseOrderCommand(folderExerciseId, request.Order);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new UpdateFolderExerciseOrderCommand(folderExerciseId, request.Order, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
@@ -135,13 +140,15 @@ public class FolderExercisesController : ControllerBase
     /// <response code="404">Exercício não encontrado</response>
     [HttpDelete("{folderExerciseId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> RemoveExerciseFromFolder(
         [FromRoute] Guid workoutFolderId,
         [FromRoute] Guid folderExerciseId,
         CancellationToken cancellationToken)
     {
-        var command = new RemoveExerciseFromFolderCommand(folderExerciseId);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new RemoveExerciseFromFolderCommand(folderExerciseId, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }

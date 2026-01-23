@@ -6,6 +6,7 @@ public class GetWorkoutFolderByIdSpec : Specification<WorkoutFolder>
 {
     public GetWorkoutFolderByIdSpec(Guid id)
     {
-        Query.Where(wf => wf.Id == id);
+        Query.Where(wf => wf.Id == id)
+             .Include(wf => wf.Profile);
     }
 }

@@ -10,7 +10,7 @@ using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.ExerciseSets.Commands;
 
-public record AddExerciseSetCommand(Guid FolderExerciseId, int? SetNumber, int Reps, decimal Weight)
+public record AddExerciseSetCommand(Guid FolderExerciseId, int? SetNumber, int Reps, decimal Weight, Guid? CurrentUserId = null)
     : ICommand<Result<CreateExerciseSetDto>>;
 
 internal class AddExerciseSetCommandHandler : ICommandHandler<AddExerciseSetCommand, Result<CreateExerciseSetDto>>
@@ -45,6 +45,12 @@ internal class AddExerciseSetCommandHandler : ICommandHandler<AddExerciseSetComm
         if (folderExercise == null)
         {
             return Result<CreateExerciseSetDto>.NotFound($"FolderExercise with ID {request.FolderExerciseId} not found.");
+        }
+
+        // Property-based authorization: Users can only add sets to exercises in their own workout folders
+        if (!request.CurrentUserId.HasValue || folderExercise.WorkoutFolder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<CreateExerciseSetDto>.Forbidden("You can only add sets to exercises in your own workout folders.");
         }
 
         var setNumber = request.SetNumber ?? await GetNextSetNumber(request.FolderExerciseId, cancellationToken);

@@ -9,7 +9,7 @@ using GymDogs.Domain.WorkoutFolders;
 
 namespace GymDogs.Application.WorkoutFolders.Commands;
 
-public record CreateWorkoutFolderCommand(Guid ProfileId, string Name, string? Description, int Order = 0)
+public record CreateWorkoutFolderCommand(Guid ProfileId, string Name, string? Description, int Order = 0, Guid? CurrentUserId = null)
     : ICommand<Result<CreateWorkoutFolderDto>>;
 
 internal class CreateWorkoutFolderCommandHandler : ICommandHandler<CreateWorkoutFolderCommand, Result<CreateWorkoutFolderDto>>
@@ -44,6 +44,12 @@ internal class CreateWorkoutFolderCommandHandler : ICommandHandler<CreateWorkout
         if (profile == null)
         {
             return Result<CreateWorkoutFolderDto>.NotFound($"Profile with ID {request.ProfileId} not found.");
+        }
+
+        // Property-based authorization: Users can only create folders for their own profile
+        if (!request.CurrentUserId.HasValue || profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<CreateWorkoutFolderDto>.Forbidden("You can only create workout folders for your own profile.");
         }
 
         var folder = new WorkoutFolder(
