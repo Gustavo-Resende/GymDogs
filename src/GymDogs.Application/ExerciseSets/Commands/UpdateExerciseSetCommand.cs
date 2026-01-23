@@ -8,7 +8,7 @@ using GymDogs.Domain.ExerciseSets.Specification;
 
 namespace GymDogs.Application.ExerciseSets.Commands;
 
-public record UpdateExerciseSetCommand(Guid ExerciseSetId, int? Reps, decimal? Weight)
+public record UpdateExerciseSetCommand(Guid ExerciseSetId, int? Reps, decimal? Weight, Guid? CurrentUserId = null)
     : ICommand<Result<GetExerciseSetDto>>;
 
 internal class UpdateExerciseSetCommandHandler : ICommandHandler<UpdateExerciseSetCommand, Result<GetExerciseSetDto>>
@@ -40,6 +40,12 @@ internal class UpdateExerciseSetCommandHandler : ICommandHandler<UpdateExerciseS
         if (exerciseSet == null)
         {
             return Result<GetExerciseSetDto>.NotFound($"ExerciseSet with ID {request.ExerciseSetId} not found.");
+        }
+
+        // Property-based authorization: Users can only update sets in their own workout folders
+        if (!request.CurrentUserId.HasValue || exerciseSet.FolderExercise.WorkoutFolder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<GetExerciseSetDto>.Forbidden("You can only update sets in your own workout folders.");
         }
 
         if (!request.Reps.HasValue && !request.Weight.HasValue)

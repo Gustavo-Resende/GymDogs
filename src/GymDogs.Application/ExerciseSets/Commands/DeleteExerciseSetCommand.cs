@@ -6,7 +6,7 @@ using GymDogs.Domain.ExerciseSets.Specification;
 
 namespace GymDogs.Application.ExerciseSets.Commands;
 
-public record DeleteExerciseSetCommand(Guid ExerciseSetId) : ICommand<Result>;
+public record DeleteExerciseSetCommand(Guid ExerciseSetId, Guid? CurrentUserId = null) : ICommand<Result>;
 
 internal class DeleteExerciseSetCommandHandler : ICommandHandler<DeleteExerciseSetCommand, Result>
 {
@@ -37,6 +37,12 @@ internal class DeleteExerciseSetCommandHandler : ICommandHandler<DeleteExerciseS
         if (exerciseSet == null)
         {
             return Result.NotFound($"ExerciseSet with ID {request.ExerciseSetId} not found.");
+        }
+
+        // Property-based authorization: Users can only delete sets in their own workout folders
+        if (!request.CurrentUserId.HasValue || exerciseSet.FolderExercise.WorkoutFolder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result.Forbidden("You can only delete sets in your own workout folders.");
         }
 
         await _exerciseSetRepository.DeleteAsync(exerciseSet, cancellationToken);

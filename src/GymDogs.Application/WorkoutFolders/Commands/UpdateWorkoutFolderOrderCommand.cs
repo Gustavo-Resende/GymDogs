@@ -8,7 +8,7 @@ using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.WorkoutFolders.Commands;
 
-public record UpdateWorkoutFolderOrderCommand(Guid WorkoutFolderId, int Order)
+public record UpdateWorkoutFolderOrderCommand(Guid WorkoutFolderId, int Order, Guid? CurrentUserId = null)
     : ICommand<Result<GetWorkoutFolderDto>>;
 
 internal class UpdateWorkoutFolderOrderCommandHandler : ICommandHandler<UpdateWorkoutFolderOrderCommand, Result<GetWorkoutFolderDto>>
@@ -40,6 +40,12 @@ internal class UpdateWorkoutFolderOrderCommandHandler : ICommandHandler<UpdateWo
         if (folder == null)
         {
             return Result<GetWorkoutFolderDto>.NotFound($"WorkoutFolder with ID {request.WorkoutFolderId} not found.");
+        }
+
+        // Property-based authorization: Users can only update order of their own workout folders
+        if (!request.CurrentUserId.HasValue || folder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<GetWorkoutFolderDto>.Forbidden("You can only update order of your own workout folders.");
         }
 
         folder.UpdateOrder(request.Order);

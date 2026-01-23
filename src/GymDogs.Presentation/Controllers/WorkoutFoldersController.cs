@@ -39,17 +39,20 @@ public class WorkoutFoldersController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateWorkoutFolderDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CreateWorkoutFolderDto>> CreateWorkoutFolder(
         [FromRoute] Guid profileId,
         [FromBody] CreateWorkoutFolderRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = HttpContext.GetUserId();
         var command = new CreateWorkoutFolderCommand(
             profileId,
             request.Name,
             request.Description,
-            request.Order
+            request.Order,
+            currentUserId
         );
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
@@ -111,6 +114,7 @@ public class WorkoutFoldersController : ControllerBase
     [HttpPut("{folderId}")]
     [ProducesResponseType(typeof(GetWorkoutFolderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetWorkoutFolderDto>> UpdateWorkoutFolder(
         [FromRoute] Guid profileId,
@@ -118,7 +122,8 @@ public class WorkoutFoldersController : ControllerBase
         [FromBody] UpdateWorkoutFolderRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateWorkoutFolderCommand(folderId, request.Name, request.Description);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new UpdateWorkoutFolderCommand(folderId, request.Name, request.Description, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
@@ -137,6 +142,7 @@ public class WorkoutFoldersController : ControllerBase
     [HttpPut("{folderId}/order")]
     [ProducesResponseType(typeof(GetWorkoutFolderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetWorkoutFolderDto>> UpdateWorkoutFolderOrder(
         [FromRoute] Guid profileId,
@@ -144,7 +150,8 @@ public class WorkoutFoldersController : ControllerBase
         [FromBody] UpdateWorkoutFolderOrderRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateWorkoutFolderOrderCommand(folderId, request.Order);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new UpdateWorkoutFolderOrderCommand(folderId, request.Order, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
@@ -160,13 +167,15 @@ public class WorkoutFoldersController : ControllerBase
     /// <response code="404">Pasta de treino não encontrada</response>
     [HttpDelete("{folderId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteWorkoutFolder(
         [FromRoute] Guid profileId,
         [FromRoute] Guid folderId,
         CancellationToken cancellationToken)
     {
-        var command = new DeleteWorkoutFolderCommand(folderId);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new DeleteWorkoutFolderCommand(folderId, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }

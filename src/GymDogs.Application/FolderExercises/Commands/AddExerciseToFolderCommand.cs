@@ -12,7 +12,7 @@ using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.FolderExercises.Commands;
 
-public record AddExerciseToFolderCommand(Guid WorkoutFolderId, Guid ExerciseId, int Order = 0)
+public record AddExerciseToFolderCommand(Guid WorkoutFolderId, Guid ExerciseId, int Order = 0, Guid? CurrentUserId = null)
     : ICommand<Result<AddExerciseToFolderDto>>;
 
 internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseToFolderCommand, Result<AddExerciseToFolderDto>>
@@ -55,6 +55,12 @@ internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseTo
         if (workoutFolder == null)
         {
             return Result<AddExerciseToFolderDto>.NotFound($"WorkoutFolder with ID {request.WorkoutFolderId} not found.");
+        }
+
+        // Property-based authorization: Users can only add exercises to their own workout folders
+        if (!request.CurrentUserId.HasValue || workoutFolder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result<AddExerciseToFolderDto>.Forbidden("You can only add exercises to your own workout folders.");
         }
 
         var exercise = await _exerciseRepository.FirstOrDefaultAsync(

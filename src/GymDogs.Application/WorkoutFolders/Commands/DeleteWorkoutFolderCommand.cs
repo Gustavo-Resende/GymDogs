@@ -6,7 +6,7 @@ using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.WorkoutFolders.Commands;
 
-public record DeleteWorkoutFolderCommand(Guid WorkoutFolderId) : ICommand<Result>;
+public record DeleteWorkoutFolderCommand(Guid WorkoutFolderId, Guid? CurrentUserId = null) : ICommand<Result>;
 
 internal class DeleteWorkoutFolderCommandHandler : ICommandHandler<DeleteWorkoutFolderCommand, Result>
 {
@@ -37,6 +37,12 @@ internal class DeleteWorkoutFolderCommandHandler : ICommandHandler<DeleteWorkout
         if (folder == null)
         {
             return Result.NotFound($"WorkoutFolder with ID {request.WorkoutFolderId} not found.");
+        }
+
+        // Property-based authorization: Users can only delete their own workout folders
+        if (!request.CurrentUserId.HasValue || folder.Profile.UserId != request.CurrentUserId.Value)
+        {
+            return Result.Forbidden("You can only delete your own workout folders.");
         }
 
         await _workoutFolderRepository.DeleteAsync(folder, cancellationToken);

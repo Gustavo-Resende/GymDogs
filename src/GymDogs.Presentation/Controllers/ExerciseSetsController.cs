@@ -39,17 +39,20 @@ public class ExerciseSetsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CreateExerciseSetDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CreateExerciseSetDto>> AddExerciseSet(
         [FromRoute] Guid folderExerciseId,
         [FromBody] AddExerciseSetRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = HttpContext.GetUserId();
         var command = new AddExerciseSetCommand(
             folderExerciseId,
             request.SetNumber,
             request.Reps,
-            request.Weight
+            request.Weight,
+            currentUserId
         );
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
@@ -111,6 +114,7 @@ public class ExerciseSetsController : ControllerBase
     [HttpPut("{setId}")]
     [ProducesResponseType(typeof(GetExerciseSetDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetExerciseSetDto>> UpdateExerciseSet(
         [FromRoute] Guid folderExerciseId,
@@ -118,7 +122,8 @@ public class ExerciseSetsController : ControllerBase
         [FromBody] UpdateExerciseSetRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateExerciseSetCommand(setId, request.Reps, request.Weight);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new UpdateExerciseSetCommand(setId, request.Reps, request.Weight, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
@@ -134,13 +139,15 @@ public class ExerciseSetsController : ControllerBase
     /// <response code="404">Série não encontrada</response>
     [HttpDelete("{setId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteExerciseSet(
         [FromRoute] Guid folderExerciseId,
         [FromRoute] Guid setId,
         CancellationToken cancellationToken)
     {
-        var command = new DeleteExerciseSetCommand(setId);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new DeleteExerciseSetCommand(setId, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }

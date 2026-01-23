@@ -96,13 +96,15 @@ public class ProfilesController : ControllerBase
     [HttpPut("{profileId}")]
     [ProducesResponseType(typeof(GetProfileDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetProfileDto>> UpdateProfile(
         [FromRoute] Guid profileId,
         [FromBody] UpdateProfileRequest request,
         CancellationToken cancellationToken)
     {
-        var command = new UpdateProfileCommand(profileId, request.DisplayName, request.Bio);
+        var currentUserId = HttpContext.GetUserId();
+        var command = new UpdateProfileCommand(profileId, request.DisplayName, request.Bio, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
@@ -120,14 +122,16 @@ public class ProfilesController : ControllerBase
     [HttpPut("{profileId}/visibility")]
     [ProducesResponseType(typeof(GetProfileDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetProfileDto>> UpdateProfileVisibility(
         [FromRoute] Guid profileId,
         [FromBody] UpdateProfileVisibilityRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = HttpContext.GetUserId();
         var visibilityDto = request.Visibility;
-        var command = new UpdateProfileVisibilityCommand(profileId, visibilityDto);
+        var command = new UpdateProfileVisibilityCommand(profileId, visibilityDto, currentUserId);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
