@@ -8,23 +8,20 @@ using Microsoft.Extensions.Configuration;
 
 namespace GymDogs.Application.Users.Commands;
 
-public record LoginCommand(string Email, string Password)
-    : ICommand<Result<LoginDto>>;
+public record RefreshTokenCommand(string RefreshToken) : ICommand<Result<RefreshTokenDto>>;
 
-internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginDto>>
+internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, Result<RefreshTokenDto>>
 {
     private readonly IReadRepository<User> _userRepository;
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
 
-    public LoginCommandHandler(
+    public RefreshTokenCommandHandler(
         IReadRepository<User> userRepository,
         IRepository<RefreshToken> refreshTokenRepository,
-        IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
@@ -32,66 +29,73 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
-        _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
     }
 
-    public async Task<Result<LoginDto>> Handle(
-        LoginCommand request,
+    public async Task<Result<RefreshTokenDto>> Handle(
+        RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
-        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return Result<RefreshTokenDto>.Invalid(
+                new List<ValidationError>
+                {
+                    new() { Identifier = "RefreshToken", ErrorMessage = "Refresh token is required." }
+                });
+        }
 
-        var user = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByEmailSpec(emailNormalized),
+        // Buscar refresh token no banco
+        var refreshToken = await _refreshTokenRepository.FirstOrDefaultAsync(
+            new GetRefreshTokenByTokenSpec(request.RefreshToken),
             cancellationToken);
 
+        if (refreshToken == null || !refreshToken.IsValid())
+        {
+            return Result<RefreshTokenDto>.Unauthorized("Invalid or expired refresh token.");
+        }
+
+        // Buscar usuário
+        var user = await _userRepository.GetByIdAsync(refreshToken.UserId, cancellationToken);
         if (user == null)
         {
-            return Result<LoginDto>.Unauthorized("Invalid email or password.");
+            return Result<RefreshTokenDto>.NotFound("User not found.");
         }
 
-        if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
-        {
-            return Result<LoginDto>.Unauthorized("Invalid email or password.");
-        }
+        // Revogar refresh token antigo
+        refreshToken.Revoke();
 
-        // Gerar access token (expira em minutos configurados)
+        // Gerar novo access token
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var accessTokenExpirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? "15");
-        var token = _jwtTokenGenerator.GenerateToken(
-            user.Id, 
-            user.Username, 
-            user.Email, 
+        var newToken = _jwtTokenGenerator.GenerateToken(
+            user.Id,
+            user.Username,
+            user.Email,
             user.Role.ToString(),
             accessTokenExpirationMinutes);
         var expiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpirationMinutes);
 
-        // Gerar refresh token (expira em dias configurados)
+        // Gerar novo refresh token
         var refreshTokenExpirationDays = int.Parse(jwtSettings["RefreshTokenExpirationDays"] ?? "7");
-        var refreshTokenValue = _refreshTokenGenerator.GenerateRefreshToken();
+        var newRefreshTokenValue = _refreshTokenGenerator.GenerateRefreshToken();
         var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpirationDays);
 
-        // Salvar refresh token no banco
-        var refreshToken = new RefreshToken(user.Id, refreshTokenValue, refreshTokenExpiresAt);
-        await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        var newRefreshToken = new RefreshToken(user.Id, newRefreshTokenValue, refreshTokenExpiresAt);
+        await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var loginDto = new LoginDto
+        var refreshTokenDto = new RefreshTokenDto
         {
-            Token = token,
-            RefreshToken = refreshTokenValue,
-            UserId = user.Id,
-            Username = user.Username,
-            Email = user.Email,
+            Token = newToken,
+            RefreshToken = newRefreshTokenValue,
             ExpiresAt = expiresAt,
-            RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            Role = user.Role.ToString()
+            RefreshTokenExpiresAt = refreshTokenExpiresAt
         };
 
-        return Result.Success(loginDto);
+        return Result.Success(refreshTokenDto);
     }
 }

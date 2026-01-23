@@ -5,7 +5,7 @@ using GymDogs.Domain.Users;
 
 namespace GymDogs.Application.Users.Commands;
 
-public record DeleteUserCommand(Guid Id) : ICommand<Result>;
+public record DeleteUserCommand(Guid Id, Guid? CurrentUserId, string? CurrentUserRole) : ICommand<Result>;
 
 internal class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand, Result>
 {
@@ -34,6 +34,14 @@ internal class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand, Res
         if (user == null)
         {
             return Result.NotFound($"User with ID {request.Id} not found.");
+        }
+
+        var isAdmin = request.CurrentUserRole == RoleConstants.Admin;
+        var isDeletingSelf = request.CurrentUserId.HasValue && request.CurrentUserId.Value == request.Id;
+
+        if (!isAdmin && !isDeletingSelf)
+        {
+            return Result.Forbidden("You can only delete your own account.");
         }
 
         await _userRepository.DeleteAsync(user, cancellationToken);

@@ -16,23 +16,30 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         _configuration = configuration;
     }
 
-    public string GenerateToken(Guid userId, string username, string email)
+    public string GenerateToken(Guid userId, string username, string email, string role, int? expirationMinutes = null)    
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] 
-            ?? throw new InvalidOperationException("JWT SecretKey não configurada");
+            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
+        // Header information
         var issuer = jwtSettings["Issuer"] ?? "GymDogs";
         var audience = jwtSettings["Audience"] ?? "GymDogsUsers";
-        var expirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "1440");
+        var defaultExpirationMinutes = int.Parse(jwtSettings["ExpirationMinutes"] ?? "15");
+        var tokenExpirationMinutes = expirationMinutes ?? defaultExpirationMinutes;
 
+        // Key information
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        // Claims information
 
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
             new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -40,7 +47,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            expires: DateTime.UtcNow.AddMinutes(tokenExpirationMinutes),
             signingCredentials: credentials
         );
 

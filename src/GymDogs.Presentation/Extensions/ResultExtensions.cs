@@ -5,12 +5,12 @@ using System.Reflection;
 namespace GymDogs.Presentation.Extensions;
 
 /// <summary>
-/// Extensões para converter Result<T> em respostas HTTP apropriadas
+/// Extensions to convert Result<T> to appropriate HTTP responses
 /// </summary>
 public static class ResultExtensions
 {
     /// <summary>
-    /// Converte um Result<T> em uma ActionResult apropriada
+    /// Converts a Result<T> to an appropriate ActionResult
     /// </summary>
     public static ActionResult<T> ToActionResult<T>(this Result<T> result) where T : class
     {
@@ -58,7 +58,7 @@ public static class ResultExtensions
     }
 
     /// <summary>
-    /// Cria um CreatedResult apropriado com route name quando possível
+    /// Creates an appropriate CreatedResult with route name when possible
     /// </summary>
     private static ActionResult<T> CreateCreatedResult<T>(T? value) where T : class
     {
@@ -67,7 +67,7 @@ public static class ResultExtensions
             return new CreatedResult(string.Empty, value);
         }
 
-        // Tenta extrair o Id usando reflexão para criar CreatedAtRoute
+        // Tries to extract the Id using reflection to create CreatedAtRoute
         var idProperty = value.GetType().GetProperty("Id");
         if (idProperty != null)
         {
@@ -86,7 +86,7 @@ public static class ResultExtensions
     }
 
     /// <summary>
-    /// Converte um Result sem valor de retorno em uma ActionResult apropriada
+    /// Converts a Result without a return value to an appropriate ActionResult
     /// </summary>
     public static ActionResult ToActionResult(this Result result)
     {

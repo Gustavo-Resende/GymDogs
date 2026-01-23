@@ -1,3 +1,4 @@
+using GymDogs.Application.Common;
 using GymDogs.Application.Exercises.Commands;
 using GymDogs.Application.Exercises.Dtos;
 using GymDogs.Application.Exercises.Queries;
@@ -27,16 +28,19 @@ public class ExercisesController : ControllerBase
     }
 
     /// <summary>
-    /// Cria um novo exercício no catálogo
+    /// Cria um novo exercício no catálogo (Apenas Admin)
     /// </summary>
     /// <param name="request">Dados do exercício</param>
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Exercício criado</returns>
     /// <response code="201">Exercício criado com sucesso</response>
     /// <response code="400">Dados inválidos</response>
+    /// <response code="403">Acesso negado - apenas administradores</response>
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(CreateExerciseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<CreateExerciseDto>> CreateExercise(
         [FromBody] CreateExerciseRequest request,
         CancellationToken cancellationToken)
@@ -103,7 +107,7 @@ public class ExercisesController : ControllerBase
     }
 
     /// <summary>
-    /// Atualiza um exercício
+    /// Atualiza um exercício (Apenas Admin)
     /// </summary>
     /// <param name="id">ID do exercício</param>
     /// <param name="request">Dados a serem atualizados</param>
@@ -111,10 +115,13 @@ public class ExercisesController : ControllerBase
     /// <returns>Exercício atualizado</returns>
     /// <response code="200">Exercício atualizado com sucesso</response>
     /// <response code="400">Dados inválidos</response>
+    /// <response code="403">Acesso negado - apenas administradores</response>
     /// <response code="404">Exercício não encontrado</response>
     [HttpPut("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(GetExerciseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetExerciseDto>> UpdateExercise(
         [FromRoute] Guid id,
@@ -127,15 +134,18 @@ public class ExercisesController : ControllerBase
     }
 
     /// <summary>
-    /// Deleta um exercício do catálogo
+    /// Deleta um exercício do catálogo (Apenas Admin)
     /// </summary>
     /// <param name="id">ID do exercício</param>
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Confirmação de exclusão</returns>
     /// <response code="204">Exercício deletado com sucesso</response>
+    /// <response code="403">Acesso negado - apenas administradores</response>
     /// <response code="404">Exercício não encontrado</response>
     [HttpDelete("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteExercise(
         [FromRoute] Guid id,

@@ -56,7 +56,11 @@ namespace GymDogs.Presentation
                 };
             });
 
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("AdminOnly", policy => 
+                    policy.RequireRole(RoleConstants.Admin))
+                .AddPolicy("UserOnly", policy => 
+                    policy.RequireRole(RoleConstants.User));
 
             builder.Services.AddControllers()
                 .ConfigureApiBehaviorOptions(options =>
@@ -81,6 +85,7 @@ namespace GymDogs.Presentation
 
             builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));

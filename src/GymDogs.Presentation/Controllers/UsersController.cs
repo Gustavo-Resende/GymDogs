@@ -1,4 +1,5 @@
 using Ardalis.Result;
+using GymDogs.Application.Common;
 using GymDogs.Application.Users.Commands;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Queries;
@@ -6,7 +7,6 @@ using GymDogs.Presentation.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace GymDogs.Presentation.Controllers;
 
@@ -88,13 +88,16 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Lista todos os usuários do sistema
+    /// Lista todos os usuários do sistema (Apenas Admin)
     /// </summary>
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Lista de usuários</returns>
     /// <response code="200">Lista de usuários retornada com sucesso</response>
+    /// <response code="403">Acesso negado - apenas administradores</response>
     [HttpGet]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(IEnumerable<GetUserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IEnumerable<GetUserDto>>> GetAllUsers(
         CancellationToken cancellationToken)
     {
@@ -121,7 +124,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<GetUserDto>> UpdateUserEmail(
         [FromRoute] Guid id,
-        [FromBody] UpdateUserEmailRequest request,
+        [FromBody] UpdateUserEmailDto request,
         CancellationToken cancellationToken)
     {
         var command = new UpdateUserEmailCommand(id, request.Email);
@@ -147,7 +150,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<GetUserDto>> UpdateUserUsername(
         [FromRoute] Guid id,
-        [FromBody] UpdateUserUsernameRequest request,
+        [FromBody] UpdateUserUsernameDto request,
         CancellationToken cancellationToken)
     {
         var command = new UpdateUserUsernameCommand(id, request.Username);
@@ -156,51 +159,27 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Deleta um usuário do sistema
+    /// Deleta um usuário do sistema (Admin pode deletar qualquer um, User pode deletar apenas a si mesmo)
     /// </summary>
     /// <param name="id">ID do usuário</param>
     /// <param name="cancellationToken">Token de cancelamento</param>
     /// <returns>Confirmação de exclusão</returns>
     /// <response code="204">Usuário deletado com sucesso</response>
+    /// <response code="403">Acesso negado - você só pode deletar sua própria conta</response>
     /// <response code="404">Usuário não encontrado</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteUser(
         [FromRoute] Guid id,
         CancellationToken cancellationToken)
     {
-        var command = new DeleteUserCommand(id);
+        var currentUserId = HttpContext.GetUserId();
+        var currentUserRole = HttpContext.GetUserRole();
+        
+        var command = new DeleteUserCommand(id, currentUserId, currentUserRole);
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
-}
-
-/// <summary>
-/// Request DTO para atualização de email
-/// </summary>
-public record UpdateUserEmailRequest
-{
-    /// <summary>
-    /// Novo email do usuário
-    /// </summary>
-    /// <example>newemail@example.com</example>
-    [Required(ErrorMessage = "Email é obrigatório")]
-    [EmailAddress(ErrorMessage = "Email inválido")]
-    [StringLength(200, ErrorMessage = "Email deve ter no máximo 200 caracteres")]
-    public string Email { get; init; } = string.Empty;
-}
-
-/// <summary>
-/// Request DTO para atualização de username
-/// </summary>
-public record UpdateUserUsernameRequest
-{
-    /// <summary>
-    /// Novo username do usuário
-    /// </summary>
-    /// <example>newusername</example>
-    [Required(ErrorMessage = "Username é obrigatório")]
-    [StringLength(100, MinimumLength = 3, ErrorMessage = "Username deve ter entre 3 e 100 caracteres")]
-    public string Username { get; init; } = string.Empty;
 }
