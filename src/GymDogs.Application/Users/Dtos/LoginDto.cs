@@ -6,9 +6,14 @@ namespace GymDogs.Application.Users.Dtos;
 public record LoginDto
 {
     /// <summary>
-    /// JWT token to be used in subsequent requests
+    /// JWT access token to be used in subsequent requests
     /// </summary>
     public string Token { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Refresh token to be used to obtain a new access token
+    /// </summary>
+    public string RefreshToken { get; init; } = string.Empty;
 
     /// <summary>
     /// User unique identifier
@@ -26,7 +31,17 @@ public record LoginDto
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
-    /// Token expiration date and time (UTC)
+    /// Access token expiration date and time (UTC)
     /// </summary>
     public DateTime ExpiresAt { get; init; }
+
+    /// <summary>
+    /// Refresh token expiration date and time (UTC)
+    /// </summary>
+    public DateTime RefreshTokenExpiresAt { get; init; }
+
+    /// <summary>
+    /// User role
+    /// </summary>
+    public string Role { get; init; } = string.Empty;
 }

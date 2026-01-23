@@ -1,3 +1,5 @@
+using GymDogs.Domain.Users;
+
 namespace GymDogs.Application.Interfaces;
 
 /// <summary>
@@ -11,6 +13,8 @@ public interface IJwtTokenGenerator
     /// <param name="userId">Unique identifier of the user</param>
     /// <param name="username">Username of the user</param>
     /// <param name="email">Email of the user</param>
+    /// <param name="role">Role of the user as string</param>
+    /// <param name="expirationMinutes">Optional expiration in minutes. If null, uses default from configuration</param>
     /// <returns>JWT token as string</returns>
-    string GenerateToken(Guid userId, string username, string email);
+    string GenerateToken(Guid userId, string username, string email, string role, int? expirationMinutes = null);
 }

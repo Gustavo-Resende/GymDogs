@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<Exercise> Exercises => Set<Exercise>();
     public DbSet<FolderExercise> FolderExercises => Set<FolderExercise>();
     public DbSet<ExerciseSet> ExerciseSets => Set<ExerciseSet>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

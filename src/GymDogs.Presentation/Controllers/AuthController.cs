@@ -70,6 +70,41 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Refreshes the access token using a valid refresh token
+    /// </summary>
+    /// <param name="request">Refresh token request</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>New access token and refresh token</returns>
+    /// <response code="200">Token refreshed successfully</response>
+    /// <response code="401">Invalid or expired refresh token</response>
+    /// <response code="400">Invalid data provided</response>
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(RefreshTokenDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<RefreshTokenDto>> Refresh(
+        [FromBody] RefreshTokenRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new RefreshTokenCommand(request.RefreshToken);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult();
+    }
+}
+
+/// <summary>
+/// Request DTO for refresh token
+/// </summary>
+public record RefreshTokenRequest
+{
+    /// <summary>
+    /// Refresh token to be used to obtain a new access token
+    /// </summary>
+    /// <example>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</example>
+    [Required(ErrorMessage = "Refresh token is required")]
+    public string RefreshToken { get; init; } = string.Empty;
 }
 
 /// <summary>

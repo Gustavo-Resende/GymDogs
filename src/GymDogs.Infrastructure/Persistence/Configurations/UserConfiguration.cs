@@ -31,13 +31,17 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(u => u.CreatedAt)
+        builder.Property(u => u.Role)
+            .IsRequired()
+            .HasConversion<int>();
+
+        builder.Property(u => u.CreatedAt)  
             .IsRequired();
 
         builder.Property(u => u.LastUpdatedAt)
             .IsRequired();
 
-        // Relacionamento 1:1 com Profile
+        // Relationship 1:1 with Profile
         builder.HasOne(u => u.Profile)
             .WithOne(p => p.User)
             .HasForeignKey<Profile>(p => p.UserId)
