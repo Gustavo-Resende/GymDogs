@@ -257,7 +257,57 @@ Acesse: http://localhost:8080/scalar/v1
 
 Você deve ver a documentação Swagger/OpenAPI interativa.
 
-### 2. Exemplos de Requisições
+### 2. Executar Testes
+
+O projeto possui uma suíte completa de testes unitários e de integração:
+
+```bash
+# Executar todos os testes
+cd src/GymDogs.Tests
+dotnet test
+
+# Executar com verbosidade normal
+dotnet test --verbosity normal
+
+# Executar testes de uma entidade específica
+dotnet test --filter "FullyQualifiedName~ExerciseTests"
+```
+
+#### Estrutura de Testes
+
+- **Testes Unitários**: Testam entidades de domínio isoladamente
+  - `Exercises/ExerciseTests.cs` - 23 testes
+  - `ExerciseSets/ExerciseSetTests.cs` - 30 testes
+  - `FolderExercises/FolderExerciseTests.cs` - 14 testes
+  - `Profiles/ProfileTests.cs` - 20 testes
+  - `Users/UserTests.cs` - 18 testes
+  - `WorkoutFolders/WorkoutFolderTests.cs` - 28 testes
+
+- **Testes de Integração**: Testam handlers de comandos e queries
+  - Cobertura completa de todos os handlers principais
+  - Uso de Moq para isolamento de dependências
+  - Testes de casos extremos e edge cases
+
+**Total: ~279 testes**
+
+### 3. Cobertura de Código
+
+O projeto está configurado para exibir cobertura de código diretamente no console usando Coverlet.
+
+```bash
+# Executar testes com cobertura exibida no console
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=text
+```
+
+A cobertura será exibida no console ao final da execução dos testes, mostrando:
+- Percentual de cobertura geral
+- Cobertura por assembly/projeto
+- Linhas cobertas vs. linhas totais
+- Branches cobertos vs. branches totais
+
+O Coverlet (já incluído no projeto) exibe automaticamente um resumo formatado e alinhado no console após a execução dos testes.
+
+### 4. Exemplos de Requisições
 
 #### Registrar um usuário
 
@@ -402,6 +452,9 @@ O sistema segue os princípios de **Clean Architecture** com separação clara d
 - **BCrypt** - Hash seguro de senhas
 - **Docker & Docker Compose** - Containerização
 - **Scalar** - Documentação interativa OpenAPI/Swagger
+- **xUnit** - Framework de testes
+- **Moq** - Framework de mocking para testes
+- **Coverlet** - Coleta e exibição de cobertura de código no console
 
 ---
 
@@ -413,7 +466,8 @@ GymDogs/
 │   ├── GymDogs.Domain/          # Entidades e regras de negócio
 │   ├── GymDogs.Application/     # Casos de uso, DTOs, interfaces
 │   ├── GymDogs.Infrastructure/  # Persistência, serviços externos
-│   └── GymDogs.Presentation/    # API, controllers, middleware
+│   ├── GymDogs.Presentation/    # API, controllers, middleware
+│   └── GymDogs.Tests/           # Testes unitários e de integração
 ├── docker-compose.yml            # Configuração Docker Compose
 ├── Dockerfile                    # Imagem Docker da API
 ├── docker-init.ps1              # Script de inicialização (Windows)
@@ -450,3 +504,5 @@ Contribuições são bem-vindas! Por favor:
 - Use CQRS para separar comandos e queries
 - Documente código complexo
 - Adicione testes quando possível
+- Mantenha cobertura de código alta (objetivo: >80%)
+- Teste casos extremos e edge cases, não apenas o caminho feliz
