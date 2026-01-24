@@ -14,7 +14,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
 {
     private readonly IReadRepository<User> _userRepository;
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IJwtTokenBuilder _jwtTokenBuilder;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
@@ -23,7 +23,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
     public RefreshTokenCommandHandler(
         IReadRepository<User> userRepository,
         IRepository<RefreshToken> refreshTokenRepository,
-        IJwtTokenGenerator jwtTokenGenerator,
+        IJwtTokenBuilder jwtTokenBuilder,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
@@ -31,7 +31,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
-        _jwtTokenGenerator = jwtTokenGenerator;
+        _jwtTokenBuilder = jwtTokenBuilder;
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
@@ -71,15 +71,17 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
         // Revogar refresh token antigo
         refreshToken.Revoke();
 
-        // Gerar novo access token
+        // Gerar novo access token usando Builder Pattern
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var accessTokenExpirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? "15");
-        var newToken = _jwtTokenGenerator.GenerateToken(
-            user.Id,
-            user.Username,
-            user.Email,
-            user.Role.ToString(),
-            accessTokenExpirationMinutes);
+        
+        var newToken = _jwtTokenBuilder
+            .WithUserId(user.Id)
+            .WithUsername(user.Username)
+            .WithEmail(user.Email)
+            .WithRole(user.Role.ToString())
+            .WithExpirationMinutes(accessTokenExpirationMinutes)
+            .Build();
         var expiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpirationMinutes);
 
         // Gerar novo refresh token

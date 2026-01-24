@@ -108,6 +108,9 @@ namespace GymDogs.Presentation
             // Factory Pattern: Registro do Factory de Specifications
             builder.Services.AddScoped<ISpecificationFactory, SpecificationFactory>();
 
+            // Builder Pattern: Registro do Builder de JWT Tokens
+            builder.Services.AddScoped<IJwtTokenBuilder, JwtTokenBuilder>();
+
             // Configuration of OpenAPI with transformer for JWT Bearer
             builder.Services.AddOpenApi(options =>
             {

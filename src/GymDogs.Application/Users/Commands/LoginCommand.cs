@@ -16,7 +16,7 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
     private readonly IReadRepository<User> _userRepository;
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IJwtTokenBuilder _jwtTokenBuilder;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
@@ -26,7 +26,7 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
         IReadRepository<User> userRepository,
         IRepository<RefreshToken> refreshTokenRepository,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator,
+        IJwtTokenBuilder jwtTokenBuilder,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
@@ -35,7 +35,7 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _passwordHasher = passwordHasher;
-        _jwtTokenGenerator = jwtTokenGenerator;
+        _jwtTokenBuilder = jwtTokenBuilder;
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
@@ -60,15 +60,17 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
             return Result<LoginDto>.Unauthorized("Invalid email or password.");
         }
 
-        // Gerar access token (expira em minutos configurados)
+        // Gerar access token usando Builder Pattern (expira em minutos configurados)
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var accessTokenExpirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? "15");
-        var token = _jwtTokenGenerator.GenerateToken(
-            user.Id, 
-            user.Username, 
-            user.Email, 
-            user.Role.ToString(),
-            accessTokenExpirationMinutes);
+        
+        var token = _jwtTokenBuilder
+            .WithUserId(user.Id)
+            .WithUsername(user.Username)
+            .WithEmail(user.Email)
+            .WithRole(user.Role.ToString())
+            .WithExpirationMinutes(accessTokenExpirationMinutes)
+            .Build();
         var expiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpirationMinutes);
 
         // Gerar refresh token (expira em dias configurados)
