@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 
 namespace GymDogs.Application.Users.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
 {
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateUserCommandHandler(
         IRepository<User> userRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetUserDto>> Handle(
@@ -42,9 +45,8 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
 
         if (!string.IsNullOrWhiteSpace(request.Username))
         {
-            var usernameNormalized = request.Username?.Trim() ?? string.Empty;
             var existingUserByUsername = await _userRepository.FirstOrDefaultAsync(
-                new GetUserByUsernameSpec(usernameNormalized),
+                _specificationFactory.CreateGetUserByUsernameSpec(request.Username),
                 cancellationToken);
 
             if (existingUserByUsername != null && existingUserByUsername.Id != request.Id)
@@ -52,14 +54,14 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
                 return Result<GetUserDto>.Conflict("A user with the given username already exists.");
             }
 
+            var usernameNormalized = request.Username?.Trim() ?? string.Empty;
             user.UpdateUsername(usernameNormalized);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
-            var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
             var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
-                new GetUserByEmailSpec(emailNormalized),
+                _specificationFactory.CreateGetUserByEmailSpec(request.Email),
                 cancellationToken);
 
             if (existingUserByEmail != null && existingUserByEmail.Id != request.Id)
@@ -67,6 +69,7 @@ internal class UpdateUserCommandHandler : ICommandHandler<UpdateUserCommand, Res
                 return Result<GetUserDto>.Conflict("A user with the given email already exists.");
             }
 
+            var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
             user.UpdateEmail(emailNormalized);
         }
 

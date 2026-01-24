@@ -1,9 +1,9 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 using Microsoft.Extensions.Configuration;
 
 namespace GymDogs.Application.Users.Commands;
@@ -18,6 +18,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public RefreshTokenCommandHandler(
         IReadRepository<User> userRepository,
@@ -25,7 +26,8 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
         IJwtTokenGenerator jwtTokenGenerator,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
@@ -33,6 +35,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<RefreshTokenDto>> Handle(
@@ -50,7 +53,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
 
         // Buscar refresh token no banco
         var refreshToken = await _refreshTokenRepository.FirstOrDefaultAsync(
-            new GetRefreshTokenByTokenSpec(request.RefreshToken),
+            _specificationFactory.CreateGetRefreshTokenByTokenSpec(request.RefreshToken),
             cancellationToken);
 
         if (refreshToken == null || !refreshToken.IsValid())

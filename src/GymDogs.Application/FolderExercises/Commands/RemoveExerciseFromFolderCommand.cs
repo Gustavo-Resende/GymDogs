@@ -1,8 +1,8 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Domain.FolderExercises;
-using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.FolderExercises.Commands;
 
@@ -12,13 +12,16 @@ internal class RemoveExerciseFromFolderCommandHandler : ICommandHandler<RemoveEx
 {
     private readonly IRepository<FolderExercise> _folderExerciseRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public RemoveExerciseFromFolderCommandHandler(
         IRepository<FolderExercise> folderExerciseRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _folderExerciseRepository = folderExerciseRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result> Handle(
@@ -31,7 +34,7 @@ internal class RemoveExerciseFromFolderCommandHandler : ICommandHandler<RemoveEx
         }
 
         var folderExercise = await _folderExerciseRepository.FirstOrDefaultAsync(
-            new GetFolderExerciseByIdSpec(request.FolderExerciseId),
+            _specificationFactory.CreateGetFolderExerciseByIdSpec(request.FolderExerciseId),
             cancellationToken);
 
         if (folderExercise == null)

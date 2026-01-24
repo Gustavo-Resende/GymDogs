@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.WorkoutFolders.Dtos;
 using GymDogs.Application.WorkoutFolders.Extensions;
 using GymDogs.Domain.Profiles;
-using GymDogs.Domain.Profiles.Specification;
 using GymDogs.Domain.WorkoutFolders;
 
 namespace GymDogs.Application.WorkoutFolders.Commands;
@@ -17,15 +17,18 @@ internal class CreateWorkoutFolderCommandHandler : ICommandHandler<CreateWorkout
     private readonly IRepository<WorkoutFolder> _workoutFolderRepository;
     private readonly IReadRepository<Profile> _profileRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public CreateWorkoutFolderCommandHandler(
         IRepository<WorkoutFolder> workoutFolderRepository,
         IReadRepository<Profile> profileRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _workoutFolderRepository = workoutFolderRepository;
         _profileRepository = profileRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<CreateWorkoutFolderDto>> Handle(
@@ -38,7 +41,7 @@ internal class CreateWorkoutFolderCommandHandler : ICommandHandler<CreateWorkout
         }
 
         var profile = await _profileRepository.FirstOrDefaultAsync(
-            new GetProfileByIdSpec(request.ProfileId),
+            _specificationFactory.CreateGetProfileByIdSpec(request.ProfileId),
             cancellationToken);
 
         if (profile == null)

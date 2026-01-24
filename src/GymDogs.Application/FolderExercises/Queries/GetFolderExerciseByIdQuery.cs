@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.FolderExercises.Dtos;
 using GymDogs.Application.FolderExercises.Extensions;
 using GymDogs.Domain.FolderExercises;
-using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.FolderExercises.Queries;
 
@@ -13,10 +13,14 @@ public record GetFolderExerciseByIdQuery(Guid FolderExerciseId) : IQuery<Result<
 internal class GetFolderExerciseByIdQueryHandler : IQueryHandler<GetFolderExerciseByIdQuery, Result<GetFolderExerciseDto>>
 {
     private readonly IReadRepository<FolderExercise> _folderExerciseRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetFolderExerciseByIdQueryHandler(IReadRepository<FolderExercise> folderExerciseRepository)
+    public GetFolderExerciseByIdQueryHandler(
+        IReadRepository<FolderExercise> folderExerciseRepository,
+        ISpecificationFactory specificationFactory)
     {
         _folderExerciseRepository = folderExerciseRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetFolderExerciseDto>> Handle(
@@ -29,7 +33,7 @@ internal class GetFolderExerciseByIdQueryHandler : IQueryHandler<GetFolderExerci
         }
 
         var folderExercise = await _folderExerciseRepository.FirstOrDefaultAsync(
-            new GetFolderExerciseByIdSpec(request.FolderExerciseId),
+            _specificationFactory.CreateGetFolderExerciseByIdSpec(request.FolderExerciseId),
             cancellationToken);
 
         if (folderExercise == null)

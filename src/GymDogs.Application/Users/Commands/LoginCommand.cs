@@ -1,9 +1,9 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 using Microsoft.Extensions.Configuration;
 
 namespace GymDogs.Application.Users.Commands;
@@ -20,6 +20,7 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public LoginCommandHandler(
         IReadRepository<User> userRepository,
@@ -28,7 +29,8 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
         IJwtTokenGenerator jwtTokenGenerator,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
@@ -37,16 +39,15 @@ internal class LoginCommandHandler : ICommandHandler<LoginCommand, Result<LoginD
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<LoginDto>> Handle(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
-        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
-
         var user = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByEmailSpec(emailNormalized),
+            _specificationFactory.CreateGetUserByEmailSpec(request.Email),
             cancellationToken);
 
         if (user == null)

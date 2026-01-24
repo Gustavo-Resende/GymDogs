@@ -2,8 +2,10 @@ using GymDogs.Application;
 using GymDogs.Application.Common;
 using GymDogs.Application.Common.ExceptionMapping;
 using GymDogs.Application.Common.ExceptionMapping.Strategies;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
+using GymDogs.Infrastructure.Persistence.Specification;
 using GymDogs.Infrastructure.Services;
 using GymDogs.Presentation.Configuration;
 using GymDogs.Presentation.Services;
@@ -102,6 +104,9 @@ namespace GymDogs.Presentation
             builder.Services.AddScoped<IExceptionMappingStrategy, DefaultExceptionStrategy>();
 
             builder.Services.AddScoped<IExceptionToResultMapper, ExceptionToResultMapper>();
+
+            // Factory Pattern: Registro do Factory de Specifications
+            builder.Services.AddScoped<ISpecificationFactory, SpecificationFactory>();
 
             // Configuration of OpenAPI with transformer for JWT Bearer
             builder.Services.AddOpenApi(options =>

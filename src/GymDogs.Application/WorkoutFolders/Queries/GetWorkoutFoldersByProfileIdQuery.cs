@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.WorkoutFolders.Dtos;
 using GymDogs.Application.WorkoutFolders.Extensions;
 using GymDogs.Domain.WorkoutFolders;
-using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.WorkoutFolders.Queries;
 
@@ -13,10 +13,14 @@ public record GetWorkoutFoldersByProfileIdQuery(Guid ProfileId) : IQuery<Result<
 internal class GetWorkoutFoldersByProfileIdQueryHandler : IQueryHandler<GetWorkoutFoldersByProfileIdQuery, Result<IEnumerable<GetWorkoutFolderDto>>>
 {
     private readonly IReadRepository<WorkoutFolder> _workoutFolderRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetWorkoutFoldersByProfileIdQueryHandler(IReadRepository<WorkoutFolder> workoutFolderRepository)
+    public GetWorkoutFoldersByProfileIdQueryHandler(
+        IReadRepository<WorkoutFolder> workoutFolderRepository,
+        ISpecificationFactory specificationFactory)
     {
         _workoutFolderRepository = workoutFolderRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<IEnumerable<GetWorkoutFolderDto>>> Handle(
@@ -29,7 +33,7 @@ internal class GetWorkoutFoldersByProfileIdQueryHandler : IQueryHandler<GetWorko
         }
 
         var folders = await _workoutFolderRepository.ListAsync(
-            new GetWorkoutFoldersByProfileIdSpec(request.ProfileId),
+            _specificationFactory.CreateGetWorkoutFoldersByProfileIdSpec(request.ProfileId),
             cancellationToken);
 
         var folderDtos = folders.Select(f => f.ToGetWorkoutFolderDto());

@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 
 namespace GymDogs.Application.Users.Queries;
 
@@ -13,10 +13,14 @@ public record GetUserByUsernameQuery(string Username) : IQuery<Result<GetUserDto
 internal class GetUserByUsernameQueryHandler : IQueryHandler<GetUserByUsernameQuery, Result<GetUserDto>>
 {
     private readonly IReadRepository<User> _userRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetUserByUsernameQueryHandler(IReadRepository<User> userRepository)
+    public GetUserByUsernameQueryHandler(
+        IReadRepository<User> userRepository,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetUserDto>> Handle(
@@ -32,9 +36,8 @@ internal class GetUserByUsernameQueryHandler : IQueryHandler<GetUserByUsernameQu
                 });
         }
 
-        var usernameNormalized = request.Username.Trim();
         var user = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByUsernameSpec(usernameNormalized),
+            _specificationFactory.CreateGetUserByUsernameSpec(request.Username),
             cancellationToken);
 
         if (user == null)

@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Exercises.Dtos;
 using GymDogs.Application.Exercises.Extensions;
 using GymDogs.Domain.Exercises;
-using GymDogs.Domain.Exercises.Specification;
 
 namespace GymDogs.Application.Exercises.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateExerciseCommandHandler : ICommandHandler<UpdateExerciseComm
 {
     private readonly IRepository<Exercise> _exerciseRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateExerciseCommandHandler(
         IRepository<Exercise> exerciseRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _exerciseRepository = exerciseRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetExerciseDto>> Handle(
@@ -34,7 +37,7 @@ internal class UpdateExerciseCommandHandler : ICommandHandler<UpdateExerciseComm
         }
 
         var exercise = await _exerciseRepository.FirstOrDefaultAsync(
-            new GetExerciseByIdSpec(request.ExerciseId),
+            _specificationFactory.CreateGetExerciseByIdSpec(request.ExerciseId),
             cancellationToken);
 
         if (exercise == null)
