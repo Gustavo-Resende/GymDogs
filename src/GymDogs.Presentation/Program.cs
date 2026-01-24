@@ -1,5 +1,7 @@
 using GymDogs.Application;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.ExceptionMapping;
+using GymDogs.Application.Common.ExceptionMapping.Strategies;
 using GymDogs.Application.Interfaces;
 using GymDogs.Infrastructure.Persistence;
 using GymDogs.Infrastructure.Services;
@@ -91,6 +93,13 @@ namespace GymDogs.Presentation
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
+
+            // Strategy Pattern: Registro das estratégias de mapeamento de exceções
+            // A ordem importa: estratégias específicas primeiro, default por último
+            builder.Services.AddScoped<IExceptionMappingStrategy, ArgumentNullExceptionStrategy>();
+            builder.Services.AddScoped<IExceptionMappingStrategy, ArgumentExceptionStrategy>();
+            builder.Services.AddScoped<IExceptionMappingStrategy, InvalidOperationExceptionStrategy>();
+            builder.Services.AddScoped<IExceptionMappingStrategy, DefaultExceptionStrategy>();
 
             builder.Services.AddScoped<IExceptionToResultMapper, ExceptionToResultMapper>();
 
