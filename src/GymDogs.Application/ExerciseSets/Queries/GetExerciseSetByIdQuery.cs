@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.ExerciseSets.Dtos;
 using GymDogs.Application.ExerciseSets.Extensions;
 using GymDogs.Domain.ExerciseSets;
-using GymDogs.Domain.ExerciseSets.Specification;
 
 namespace GymDogs.Application.ExerciseSets.Queries;
 
@@ -13,10 +13,14 @@ public record GetExerciseSetByIdQuery(Guid ExerciseSetId) : IQuery<Result<GetExe
 internal class GetExerciseSetByIdQueryHandler : IQueryHandler<GetExerciseSetByIdQuery, Result<GetExerciseSetDto>>
 {
     private readonly IReadRepository<ExerciseSet> _exerciseSetRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetExerciseSetByIdQueryHandler(IReadRepository<ExerciseSet> exerciseSetRepository)
+    public GetExerciseSetByIdQueryHandler(
+        IReadRepository<ExerciseSet> exerciseSetRepository,
+        ISpecificationFactory specificationFactory)
     {
         _exerciseSetRepository = exerciseSetRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetExerciseSetDto>> Handle(
@@ -29,7 +33,7 @@ internal class GetExerciseSetByIdQueryHandler : IQueryHandler<GetExerciseSetById
         }
 
         var exerciseSet = await _exerciseSetRepository.FirstOrDefaultAsync(
-            new GetExerciseSetByIdSpec(request.ExerciseSetId),
+            _specificationFactory.CreateGetExerciseSetByIdSpec(request.ExerciseSetId),
             cancellationToken);
 
         if (exerciseSet == null)

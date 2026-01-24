@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Profiles.Dtos;
 using GymDogs.Application.Profiles.Extensions;
 using GymDogs.Domain.Profiles;
-using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Queries;
 
@@ -13,10 +13,14 @@ public record GetProfileByUserIdQuery(Guid UserId, Guid? CurrentUserId = null) :
 internal class GetProfileByUserIdQueryHandler : IQueryHandler<GetProfileByUserIdQuery, Result<GetProfileDto>>
 {
     private readonly IReadRepository<Profile> _profileRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetProfileByUserIdQueryHandler(IReadRepository<Profile> profileRepository)
+    public GetProfileByUserIdQueryHandler(
+        IReadRepository<Profile> profileRepository,
+        ISpecificationFactory specificationFactory)
     {
         _profileRepository = profileRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetProfileDto>> Handle(
@@ -29,7 +33,7 @@ internal class GetProfileByUserIdQueryHandler : IQueryHandler<GetProfileByUserId
         }
 
         var profile = await _profileRepository.FirstOrDefaultAsync(
-            new GetProfileByUserIdSpec(request.UserId),
+            _specificationFactory.CreateGetProfileByUserIdSpec(request.UserId),
             cancellationToken);
 
         if (profile == null)

@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Profiles.Dtos;
 using GymDogs.Application.Profiles.Extensions;
 using GymDogs.Domain.Profiles;
-using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateProfileVisibilityCommandHandler : ICommandHandler<UpdatePro
 {
     private readonly IRepository<Profile> _profileRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateProfileVisibilityCommandHandler(
         IRepository<Profile> profileRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _profileRepository = profileRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetProfileDto>> Handle(
@@ -34,7 +37,7 @@ internal class UpdateProfileVisibilityCommandHandler : ICommandHandler<UpdatePro
         }
 
         var profile = await _profileRepository.FirstOrDefaultAsync(
-            new GetProfileByIdSpec(request.ProfileId),
+            _specificationFactory.CreateGetProfileByIdSpec(request.ProfileId),
             cancellationToken);
 
         if (profile == null)

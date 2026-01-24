@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 
 namespace GymDogs.Application.Users.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateUserEmailCommandHandler : ICommandHandler<UpdateUserEmailCo
 {
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateUserEmailCommandHandler(
         IRepository<User> userRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetUserDto>> Handle(
@@ -40,9 +43,8 @@ internal class UpdateUserEmailCommandHandler : ICommandHandler<UpdateUserEmailCo
             return Result<GetUserDto>.NotFound($"User with ID {request.Id} not found.");
         }
 
-        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
         var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByEmailSpec(emailNormalized),
+            _specificationFactory.CreateGetUserByEmailSpec(request.Email),
             cancellationToken);
 
         if (existingUserByEmail != null && existingUserByEmail.Id != request.Id)
@@ -50,6 +52,7 @@ internal class UpdateUserEmailCommandHandler : ICommandHandler<UpdateUserEmailCo
             return Result<GetUserDto>.Conflict("A user with the given email already exists.");
         }
 
+        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
         user.UpdateEmail(emailNormalized);
         await _userRepository.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

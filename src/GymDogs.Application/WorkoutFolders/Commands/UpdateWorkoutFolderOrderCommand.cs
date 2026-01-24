@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.WorkoutFolders.Dtos;
 using GymDogs.Application.WorkoutFolders.Extensions;
 using GymDogs.Domain.WorkoutFolders;
-using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.WorkoutFolders.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateWorkoutFolderOrderCommandHandler : ICommandHandler<UpdateWo
 {
     private readonly IRepository<WorkoutFolder> _workoutFolderRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateWorkoutFolderOrderCommandHandler(
         IRepository<WorkoutFolder> workoutFolderRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _workoutFolderRepository = workoutFolderRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetWorkoutFolderDto>> Handle(
@@ -34,7 +37,7 @@ internal class UpdateWorkoutFolderOrderCommandHandler : ICommandHandler<UpdateWo
         }
 
         var folder = await _workoutFolderRepository.FirstOrDefaultAsync(
-            new GetWorkoutFolderByIdSpec(request.WorkoutFolderId),
+            _specificationFactory.CreateGetWorkoutFolderByIdSpec(request.WorkoutFolderId),
             cancellationToken);
 
         if (folder == null)

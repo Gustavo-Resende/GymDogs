@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Profiles.Dtos;
 using GymDogs.Application.Profiles.Extensions;
 using GymDogs.Domain.Profiles;
-using GymDogs.Domain.Profiles.Specification;
 
 namespace GymDogs.Application.Profiles.Queries;
 
@@ -13,10 +13,14 @@ public record SearchPublicProfilesQuery(string SearchTerm) : IQuery<Result<IEnum
 internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProfilesQuery, Result<IEnumerable<GetProfileDto>>>
 {
     private readonly IReadRepository<Profile> _profileRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public SearchPublicProfilesQueryHandler(IReadRepository<Profile> profileRepository)
+    public SearchPublicProfilesQueryHandler(
+        IReadRepository<Profile> profileRepository,
+        ISpecificationFactory specificationFactory)
     {
         _profileRepository = profileRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<IEnumerable<GetProfileDto>>> Handle(
@@ -33,7 +37,7 @@ internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProf
         }
 
         var profiles = await _profileRepository.ListAsync(
-            new SearchPublicProfilesSpec(request.SearchTerm.Trim()),
+            _specificationFactory.CreateSearchPublicProfilesSpec(request.SearchTerm),
             cancellationToken);
 
         var profileDtos = profiles.Select(p => p.ToGetProfileDto());

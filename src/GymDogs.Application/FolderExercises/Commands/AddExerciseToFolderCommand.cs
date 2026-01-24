@@ -1,14 +1,12 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.FolderExercises.Dtos;
 using GymDogs.Application.FolderExercises.Extensions;
 using GymDogs.Domain.Exercises;
-using GymDogs.Domain.Exercises.Specification;
 using GymDogs.Domain.FolderExercises;
-using GymDogs.Domain.FolderExercises.Specification;
 using GymDogs.Domain.WorkoutFolders;
-using GymDogs.Domain.WorkoutFolders.Specification;
 
 namespace GymDogs.Application.FolderExercises.Commands;
 
@@ -21,17 +19,20 @@ internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseTo
     private readonly IReadRepository<WorkoutFolder> _workoutFolderRepository;
     private readonly IReadRepository<Exercise> _exerciseRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public AddExerciseToFolderCommandHandler(
         IRepository<FolderExercise> folderExerciseRepository,
         IReadRepository<WorkoutFolder> workoutFolderRepository,
         IReadRepository<Exercise> exerciseRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _folderExerciseRepository = folderExerciseRepository;
         _workoutFolderRepository = workoutFolderRepository;
         _exerciseRepository = exerciseRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<AddExerciseToFolderDto>> Handle(
@@ -49,7 +50,7 @@ internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseTo
         }
 
         var workoutFolder = await _workoutFolderRepository.FirstOrDefaultAsync(
-            new GetWorkoutFolderByIdSpec(request.WorkoutFolderId),
+            _specificationFactory.CreateGetWorkoutFolderByIdSpec(request.WorkoutFolderId),
             cancellationToken);
 
         if (workoutFolder == null)
@@ -64,7 +65,7 @@ internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseTo
         }
 
         var exercise = await _exerciseRepository.FirstOrDefaultAsync(
-            new GetExerciseByIdSpec(request.ExerciseId),
+            _specificationFactory.CreateGetExerciseByIdSpec(request.ExerciseId),
             cancellationToken);
 
         if (exercise == null)
@@ -73,7 +74,7 @@ internal class AddExerciseToFolderCommandHandler : ICommandHandler<AddExerciseTo
         }
 
         var existingFolderExercise = await _folderExerciseRepository.FirstOrDefaultAsync(
-            new GetFolderExerciseByFolderAndExerciseSpec(request.WorkoutFolderId, request.ExerciseId),
+            _specificationFactory.CreateGetFolderExerciseByFolderAndExerciseSpec(request.WorkoutFolderId, request.ExerciseId),
             cancellationToken);
 
         if (existingFolderExercise != null)

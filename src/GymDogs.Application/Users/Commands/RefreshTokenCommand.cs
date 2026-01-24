@@ -1,9 +1,9 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 using Microsoft.Extensions.Configuration;
 
 namespace GymDogs.Application.Users.Commands;
@@ -14,25 +14,28 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
 {
     private readonly IReadRepository<User> _userRepository;
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IJwtTokenBuilder _jwtTokenBuilder;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public RefreshTokenCommandHandler(
         IReadRepository<User> userRepository,
         IRepository<RefreshToken> refreshTokenRepository,
-        IJwtTokenGenerator jwtTokenGenerator,
+        IJwtTokenBuilder jwtTokenBuilder,
         IRefreshTokenGenerator refreshTokenGenerator,
         IUnitOfWork unitOfWork,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
-        _jwtTokenGenerator = jwtTokenGenerator;
+        _jwtTokenBuilder = jwtTokenBuilder;
         _refreshTokenGenerator = refreshTokenGenerator;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<RefreshTokenDto>> Handle(
@@ -50,7 +53,7 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
 
         // Buscar refresh token no banco
         var refreshToken = await _refreshTokenRepository.FirstOrDefaultAsync(
-            new GetRefreshTokenByTokenSpec(request.RefreshToken),
+            _specificationFactory.CreateGetRefreshTokenByTokenSpec(request.RefreshToken),
             cancellationToken);
 
         if (refreshToken == null || !refreshToken.IsValid())
@@ -68,15 +71,17 @@ internal class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand,
         // Revogar refresh token antigo
         refreshToken.Revoke();
 
-        // Gerar novo access token
+        // Gerar novo access token usando Builder Pattern
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var accessTokenExpirationMinutes = int.Parse(jwtSettings["AccessTokenExpirationMinutes"] ?? "15");
-        var newToken = _jwtTokenGenerator.GenerateToken(
-            user.Id,
-            user.Username,
-            user.Email,
-            user.Role.ToString(),
-            accessTokenExpirationMinutes);
+        
+        var newToken = _jwtTokenBuilder
+            .WithUserId(user.Id)
+            .WithUsername(user.Username)
+            .WithEmail(user.Email)
+            .WithRole(user.Role.ToString())
+            .WithExpirationMinutes(accessTokenExpirationMinutes)
+            .Build();
         var expiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpirationMinutes);
 
         // Gerar novo refresh token

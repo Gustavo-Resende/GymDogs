@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 
 namespace GymDogs.Application.Users.Queries;
 
@@ -13,10 +13,14 @@ public record GetUserByEmailQuery(string Email) : IQuery<Result<GetUserDto>>;
 internal class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQuery, Result<GetUserDto>>
 {
     private readonly IReadRepository<User> _userRepository;
+    private readonly ISpecificationFactory _specificationFactory;
 
-    public GetUserByEmailQueryHandler(IReadRepository<User> userRepository)
+    public GetUserByEmailQueryHandler(
+        IReadRepository<User> userRepository,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetUserDto>> Handle(
@@ -32,9 +36,8 @@ internal class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQuery, R
                 });
         }
 
-        var emailNormalized = request.Email.Trim().ToLowerInvariant();
         var user = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByEmailSpec(emailNormalized),
+            _specificationFactory.CreateGetUserByEmailSpec(request.Email),
             cancellationToken);
 
         if (user == null)

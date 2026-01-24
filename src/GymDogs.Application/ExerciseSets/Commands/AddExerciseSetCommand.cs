@@ -1,12 +1,11 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.ExerciseSets.Dtos;
 using GymDogs.Application.ExerciseSets.Extensions;
 using GymDogs.Domain.ExerciseSets;
-using GymDogs.Domain.ExerciseSets.Specification;
 using GymDogs.Domain.FolderExercises;
-using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.ExerciseSets.Commands;
 
@@ -18,15 +17,18 @@ internal class AddExerciseSetCommandHandler : ICommandHandler<AddExerciseSetComm
     private readonly IRepository<ExerciseSet> _exerciseSetRepository;
     private readonly IReadRepository<FolderExercise> _folderExerciseRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public AddExerciseSetCommandHandler(
         IRepository<ExerciseSet> exerciseSetRepository,
         IReadRepository<FolderExercise> folderExerciseRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _exerciseSetRepository = exerciseSetRepository;
         _folderExerciseRepository = folderExerciseRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<CreateExerciseSetDto>> Handle(
@@ -39,7 +41,7 @@ internal class AddExerciseSetCommandHandler : ICommandHandler<AddExerciseSetComm
         }
 
         var folderExercise = await _folderExerciseRepository.FirstOrDefaultAsync(
-            new GetFolderExerciseByIdSpec(request.FolderExerciseId),
+            _specificationFactory.CreateGetFolderExerciseByIdSpec(request.FolderExerciseId),
             cancellationToken);
 
         if (folderExercise == null)
@@ -70,7 +72,7 @@ internal class AddExerciseSetCommandHandler : ICommandHandler<AddExerciseSetComm
     private async Task<int> GetNextSetNumber(Guid folderExerciseId, CancellationToken cancellationToken)
     {
         var existingSets = await _exerciseSetRepository.ListAsync(
-            new GetExerciseSetsByFolderExerciseIdSpec(folderExerciseId),
+            _specificationFactory.CreateGetExerciseSetsByFolderExerciseIdSpec(folderExerciseId),
             cancellationToken);
 
         if (!existingSets.Any())

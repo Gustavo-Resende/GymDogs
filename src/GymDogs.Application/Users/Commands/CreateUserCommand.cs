@@ -1,11 +1,11 @@
 ﻿using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.Users.Dtos;
 using GymDogs.Application.Users.Extensions;
 using GymDogs.Domain.Profiles;
 using GymDogs.Domain.Users;
-using GymDogs.Domain.Users.Specification;
 
 namespace GymDogs.Application.Users.Commands;
 
@@ -18,28 +18,28 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
     private readonly IRepository<Profile> _profileRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public CreateUserCommandHandler(
         IRepository<User> userRepository,
         IRepository<Profile> profileRepository,
         IPasswordHasher passwordHasher,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _userRepository = userRepository;
         _profileRepository = profileRepository;
         _passwordHasher = passwordHasher;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<CreateUserDto>> Handle(
         CreateUserCommand request,
         CancellationToken cancellationToken)
     {
-        var emailNormalized = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
-        var usernameNormalized = request.Username?.Trim() ?? string.Empty;
-
         var existingUserByEmail = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByEmailSpec(emailNormalized),
+            _specificationFactory.CreateGetUserByEmailSpec(request.Email),
             cancellationToken);
 
         if (existingUserByEmail != null)
@@ -48,7 +48,7 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
         }
 
         var existingUserByUsername = await _userRepository.FirstOrDefaultAsync(
-            new GetUserByUsernameSpec(usernameNormalized),
+            _specificationFactory.CreateGetUserByUsernameSpec(request.Username),
             cancellationToken);
 
         if (existingUserByUsername != null)
@@ -58,10 +58,10 @@ internal class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Res
 
         var passwordHash = _passwordHasher.HashPassword(request.Password);
 
-        var user = new User(usernameNormalized, emailNormalized, passwordHash);
+        var user = new User(request.Username, request.Email, passwordHash);
         await _userRepository.AddAsync(user, cancellationToken);
 
-        var profile = new Profile(user.Id, usernameNormalized);
+        var profile = new Profile(user.Id, request.Username);
         await _profileRepository.AddAsync(profile, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

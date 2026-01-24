@@ -1,10 +1,10 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
+using GymDogs.Application.Common.Specification;
 using GymDogs.Application.Interfaces;
 using GymDogs.Application.FolderExercises.Dtos;
 using GymDogs.Application.FolderExercises.Extensions;
 using GymDogs.Domain.FolderExercises;
-using GymDogs.Domain.FolderExercises.Specification;
 
 namespace GymDogs.Application.FolderExercises.Commands;
 
@@ -15,13 +15,16 @@ internal class UpdateFolderExerciseOrderCommandHandler : ICommandHandler<UpdateF
 {
     private readonly IRepository<FolderExercise> _folderExerciseRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISpecificationFactory _specificationFactory;
 
     public UpdateFolderExerciseOrderCommandHandler(
         IRepository<FolderExercise> folderExerciseRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ISpecificationFactory specificationFactory)
     {
         _folderExerciseRepository = folderExerciseRepository;
         _unitOfWork = unitOfWork;
+        _specificationFactory = specificationFactory;
     }
 
     public async Task<Result<GetFolderExerciseDto>> Handle(
@@ -34,7 +37,7 @@ internal class UpdateFolderExerciseOrderCommandHandler : ICommandHandler<UpdateF
         }
 
         var folderExercise = await _folderExerciseRepository.FirstOrDefaultAsync(
-            new GetFolderExerciseByIdSpec(request.FolderExerciseId),
+            _specificationFactory.CreateGetFolderExerciseByIdSpec(request.FolderExerciseId),
             cancellationToken);
 
         if (folderExercise == null)
