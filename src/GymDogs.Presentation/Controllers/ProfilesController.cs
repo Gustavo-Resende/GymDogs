@@ -88,6 +88,26 @@ public class ProfilesController : ControllerBase
     }
 
     /// <summary>
+    /// Busca perfis públicos por username ou display name
+    /// </summary>
+    /// <param name="searchTerm">Termo de busca</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Lista de perfis públicos encontrados</returns>
+    /// <response code="200">Lista de perfis públicos retornada com sucesso</response>
+    /// <response code="400">Termo de busca inválido</response>
+    [HttpGet("public/search")]
+    [ProducesResponseType(typeof(IEnumerable<GetProfileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<GetProfileDto>>> SearchPublicProfiles(
+        [FromQuery] string searchTerm,
+        CancellationToken cancellationToken)
+    {
+        var query = new SearchPublicProfilesQuery(searchTerm);
+        var result = await _mediator.Send(query, cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>
     /// Atualiza os dados de um perfil
     /// </summary>
     /// <param name="profileId">ID do perfil</param>
