@@ -1,7 +1,6 @@
 using Ardalis.Result;
 using GymDogs.Application.Common;
 using GymDogs.Application.Common.Specification;
-using GymDogs.Application.Interfaces;
 using GymDogs.Application.ExerciseSets.Dtos;
 using GymDogs.Application.ExerciseSets.Extensions;
 using GymDogs.Domain.ExerciseSets;
@@ -29,7 +28,11 @@ internal class GetExerciseSetByIdQueryHandler : IQueryHandler<GetExerciseSetById
     {
         if (request.ExerciseSetId == Guid.Empty)
         {
-            return Result<GetExerciseSetDto>.NotFound("ExerciseSet ID is required.");
+            return Result<GetExerciseSetDto>.Invalid(
+                new List<ValidationError>
+                {
+                    new() { Identifier = nameof(request.ExerciseSetId), ErrorMessage = "ExerciseSet ID is required and cannot be empty." }
+                });
         }
 
         var exerciseSet = await _exerciseSetRepository.FirstOrDefaultAsync(

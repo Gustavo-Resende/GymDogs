@@ -88,6 +88,45 @@ namespace GymDogs.Presentation
                     };
                 });
 
+            // CORS Configuration
+            // Lê origens permitidas do appsettings (por ambiente)
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>();
+
+            // Se não configurado no appsettings, usa valores padrão para desenvolvimento
+            if (allowedOrigins == null || allowedOrigins.Length == 0)
+            {
+                allowedOrigins = builder.Environment.IsDevelopment()
+                    ? new[] { "http://localhost:3000", "http://localhost:5173", "http://localhost:5174" }
+                    : Array.Empty<string>();
+            }
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        // Desenvolvimento: permite origens configuradas + qualquer método/header
+                        policy.WithOrigins(allowedOrigins)
+                              .AllowAnyHeader()
+                              .AllowAnyMethod()
+                              .AllowCredentials()
+                              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight por 24h
+                    }
+                    else
+                    {
+                        // Produção: mais restritivo
+                        policy.WithOrigins(allowedOrigins)
+                              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
+                              .AllowCredentials()
+                              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
+                    }
+                });
+            });
+
             builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
             builder.Services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
@@ -117,9 +156,35 @@ namespace GymDogs.Presentation
                 options.AddDocumentTransformer<JwtBearerOpenApiTransformer>();
             });
 
+            // Response Compression - Reduz tamanho das respostas HTTP
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+                options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+            });
+
+            // Response Caching - Cache de respostas HTTP
+            builder.Services.AddResponseCaching();
+
             var app = builder.Build();
 
-            app.UseHttpsRedirection();
+            // CORS deve vir ANTES de qualquer outro middleware
+            // Isso permite que requisições OPTIONS (preflight) sejam processadas
+            app.UseCors("AllowFrontend");
+
+            // Response Compression - Deve vir antes de outros middlewares
+            app.UseResponseCompression();
+
+            // Response Caching - Deve vir antes de UseRouting/UseEndpoints
+            app.UseResponseCaching();
+
+            // HTTPS Redirection pode interferir com CORS em desenvolvimento
+            // Apenas usar em produção
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();

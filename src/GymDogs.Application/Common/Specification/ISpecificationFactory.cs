@@ -27,6 +27,8 @@ public interface ISpecificationFactory
     // Exercise Specifications
     GetExerciseByIdSpec CreateGetExerciseByIdSpec(Guid exerciseId);
     SearchExercisesByNameSpec CreateSearchExercisesByNameSpec(string searchTerm);
+    GetAvailableExercisesForFolderSpec CreateGetAvailableExercisesForFolderSpec(Guid workoutFolderId);
+    SearchAvailableExercisesForFolderSpec CreateSearchAvailableExercisesForFolderSpec(Guid workoutFolderId, string searchTerm);
     
     // WorkoutFolder Specifications
     GetWorkoutFolderByIdSpec CreateGetWorkoutFolderByIdSpec(Guid workoutFolderId);

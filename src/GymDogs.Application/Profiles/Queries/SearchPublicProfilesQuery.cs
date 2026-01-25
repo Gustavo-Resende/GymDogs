@@ -8,9 +8,9 @@ using GymDogs.Domain.Profiles;
 
 namespace GymDogs.Application.Profiles.Queries;
 
-public record SearchPublicProfilesQuery(string SearchTerm) : IQuery<Result<IEnumerable<GetProfileDto>>>;
+public record SearchPublicProfilesQuery(string SearchTerm) : IQuery<Result<GetProfilesResponseDto>>;
 
-internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProfilesQuery, Result<IEnumerable<GetProfileDto>>>
+internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProfilesQuery, Result<GetProfilesResponseDto>>
 {
     private readonly IReadRepository<Profile> _profileRepository;
     private readonly ISpecificationFactory _specificationFactory;
@@ -23,13 +23,13 @@ internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProf
         _specificationFactory = specificationFactory;
     }
 
-    public async Task<Result<IEnumerable<GetProfileDto>>> Handle(
+    public async Task<Result<GetProfilesResponseDto>> Handle(
         SearchPublicProfilesQuery request,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            return Result<IEnumerable<GetProfileDto>>.Invalid(
+            return Result<GetProfilesResponseDto>.Invalid(
                 new List<ValidationError>
                 {
                     new() { Identifier = "SearchTerm", ErrorMessage = "Search term is required." }
@@ -40,8 +40,16 @@ internal class SearchPublicProfilesQueryHandler : IQueryHandler<SearchPublicProf
             _specificationFactory.CreateSearchPublicProfilesSpec(request.SearchTerm),
             cancellationToken);
 
-        var profileDtos = profiles.Select(p => p.ToGetProfileDto());
+        var profileDtos = profiles.Select(p => p.ToGetProfileDto()).ToList();
 
-        return Result.Success(profileDtos);
+        var response = new GetProfilesResponseDto
+        {
+            Profiles = profileDtos,
+            Message = profileDtos.Count == 0 
+                ? $"Nenhum perfil público encontrado para o termo '{request.SearchTerm}'. Tente buscar com outro termo." 
+                : null
+        };
+
+        return Result.Success(response);
     }
 }

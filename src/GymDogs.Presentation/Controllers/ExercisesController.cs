@@ -87,6 +87,48 @@ public class ExercisesController : ControllerBase
     }
 
     /// <summary>
+    /// Lista exercícios disponíveis (não adicionados) em uma pasta de treino
+    /// </summary>
+    /// <param name="workoutFolderId">ID da pasta de treino</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Lista de exercícios disponíveis</returns>
+    /// <response code="200">Lista de exercícios disponíveis retornada com sucesso</response>
+    /// <response code="400">ID da pasta inválido</response>
+    [HttpGet("available/{workoutFolderId}")]
+    [ProducesResponseType(typeof(IEnumerable<GetExerciseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<GetExerciseDto>>> GetAvailableExercisesForFolder(
+        [FromRoute] Guid workoutFolderId,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetAvailableExercisesForFolderQuery(workoutFolderId);
+        var result = await _mediator.Send(query, cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Busca exercícios disponíveis (não adicionados) em uma pasta de treino por nome
+    /// </summary>
+    /// <param name="workoutFolderId">ID da pasta de treino</param>
+    /// <param name="searchTerm">Termo de busca</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Lista de exercícios disponíveis encontrados</returns>
+    /// <response code="200">Lista de exercícios disponíveis retornada com sucesso</response>
+    /// <response code="400">ID da pasta ou termo de busca inválido</response>
+    [HttpGet("available/{workoutFolderId}/search")]
+    [ProducesResponseType(typeof(IEnumerable<GetExerciseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<GetExerciseDto>>> SearchAvailableExercisesForFolder(
+        [FromRoute] Guid workoutFolderId,
+        [FromQuery] string searchTerm,
+        CancellationToken cancellationToken)
+    {
+        var query = new SearchAvailableExercisesForFolderQuery(workoutFolderId, searchTerm);
+        var result = await _mediator.Send(query, cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>
     /// Obtém um exercício pelo ID
     /// </summary>
     /// <param name="id">ID do exercício</param>

@@ -11,6 +11,7 @@ public class SearchPublicProfilesSpec : Specification<Profile>
                         (p.DisplayName.Contains(searchTerm) ||
                          p.User != null && p.User.Username.Contains(searchTerm)))
              .Include(p => p.User)
+             .AsNoTracking() // Otimização: não rastreia entidades para queries de leitura
              .OrderByDescending(p => p.CreatedAt);
     }
 }

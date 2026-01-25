@@ -70,6 +70,18 @@ public class SpecificationFactory : ISpecificationFactory
         return new SearchExercisesByNameSpec(normalizedSearchTerm);
     }
 
+    public GetAvailableExercisesForFolderSpec CreateGetAvailableExercisesForFolderSpec(Guid workoutFolderId)
+    {
+        return new GetAvailableExercisesForFolderSpec(workoutFolderId);
+    }
+
+    public SearchAvailableExercisesForFolderSpec CreateSearchAvailableExercisesForFolderSpec(Guid workoutFolderId, string searchTerm)
+    {
+        // Normalização centralizada: trim
+        var normalizedSearchTerm = searchTerm?.Trim() ?? string.Empty;
+        return new SearchAvailableExercisesForFolderSpec(workoutFolderId, normalizedSearchTerm);
+    }
+
     // WorkoutFolder Specifications
     public GetWorkoutFolderByIdSpec CreateGetWorkoutFolderByIdSpec(Guid workoutFolderId)
     {

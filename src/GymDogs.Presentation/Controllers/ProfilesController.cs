@@ -75,11 +75,12 @@ public class ProfilesController : ControllerBase
     /// Lista todos os perfis públicos
     /// </summary>
     /// <param name="cancellationToken">Token de cancelamento</param>
-    /// <returns>Lista de perfis públicos</returns>
-    /// <response code="200">Lista de perfis públicos retornada com sucesso</response>
+    /// <returns>Lista de perfis públicos com informação sobre resultados vazios</returns>
+    /// <response code="200">Lista de perfis públicos retornada com sucesso (pode estar vazia)</response>
     [HttpGet("public")]
-    [ProducesResponseType(typeof(IEnumerable<GetProfileDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<GetProfileDto>>> GetPublicProfiles(
+    [ProducesResponseType(typeof(GetProfilesResponseDto), StatusCodes.Status200OK)]
+    [ResponseCache(Duration = 30, VaryByQueryKeys = new[] { "*" })]
+    public async Task<ActionResult<GetProfilesResponseDto>> GetPublicProfiles(
         CancellationToken cancellationToken)
     {
         var query = new GetPublicProfilesQuery();
@@ -92,13 +93,14 @@ public class ProfilesController : ControllerBase
     /// </summary>
     /// <param name="searchTerm">Termo de busca</param>
     /// <param name="cancellationToken">Token de cancelamento</param>
-    /// <returns>Lista de perfis públicos encontrados</returns>
-    /// <response code="200">Lista de perfis públicos retornada com sucesso</response>
+    /// <returns>Lista de perfis públicos encontrados com informação sobre resultados vazios</returns>
+    /// <response code="200">Lista de perfis públicos retornada com sucesso (pode estar vazia)</response>
     /// <response code="400">Termo de busca inválido</response>
     [HttpGet("public/search")]
-    [ProducesResponseType(typeof(IEnumerable<GetProfileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetProfilesResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<GetProfileDto>>> SearchPublicProfiles(
+    [ResponseCache(Duration = 30, VaryByQueryKeys = new[] { "searchTerm" })]
+    public async Task<ActionResult<GetProfilesResponseDto>> SearchPublicProfiles(
         [FromQuery] string searchTerm,
         CancellationToken cancellationToken)
     {

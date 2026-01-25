@@ -8,9 +8,9 @@ using GymDogs.Domain.Profiles;
 
 namespace GymDogs.Application.Profiles.Queries;
 
-public record GetPublicProfilesQuery : IQuery<Result<IEnumerable<GetProfileDto>>>;
+public record GetPublicProfilesQuery : IQuery<Result<GetProfilesResponseDto>>;
 
-internal class GetPublicProfilesQueryHandler : IQueryHandler<GetPublicProfilesQuery, Result<IEnumerable<GetProfileDto>>>
+internal class GetPublicProfilesQueryHandler : IQueryHandler<GetPublicProfilesQuery, Result<GetProfilesResponseDto>>
 {
     private readonly IReadRepository<Profile> _profileRepository;
     private readonly ISpecificationFactory _specificationFactory;
@@ -23,7 +23,7 @@ internal class GetPublicProfilesQueryHandler : IQueryHandler<GetPublicProfilesQu
         _specificationFactory = specificationFactory;
     }
 
-    public async Task<Result<IEnumerable<GetProfileDto>>> Handle(
+    public async Task<Result<GetProfilesResponseDto>> Handle(
         GetPublicProfilesQuery request,
         CancellationToken cancellationToken)
     {
@@ -31,8 +31,16 @@ internal class GetPublicProfilesQueryHandler : IQueryHandler<GetPublicProfilesQu
             _specificationFactory.CreateGetPublicProfilesSpec(),
             cancellationToken);
 
-        var profileDtos = profiles.Select(p => p.ToGetProfileDto());
+        var profileDtos = profiles.Select(p => p.ToGetProfileDto()).ToList();
 
-        return Result.Success(profileDtos);
+        var response = new GetProfilesResponseDto
+        {
+            Profiles = profileDtos,
+            Message = profileDtos.Count == 0 
+                ? "Nenhum perfil público cadastrado ainda. Seja o primeiro a se cadastrar!" 
+                : null
+        };
+
+        return Result.Success(response);
     }
 }
