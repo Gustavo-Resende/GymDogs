@@ -8,7 +8,7 @@ public class GetFolderExercisesByFolderIdSpec : Specification<FolderExercise>
     {
         Query.Where(fe => fe.WorkoutFolderId == workoutFolderId)
              .Include(fe => fe.Exercise)
-             .AsNoTracking() // Otimização: não rastreia entidades para queries de leitura
+             .AsNoTracking() // Optimization: does not track entities for read-only queries
              .OrderBy(fe => fe.Order)
              .ThenBy(fe => fe.CreatedAt);
     }

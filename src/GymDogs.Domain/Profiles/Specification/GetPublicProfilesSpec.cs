@@ -9,7 +9,7 @@ public class GetPublicProfilesSpec : Specification<Profile>
     {
         Query.Where(p => p.Visibility == ProfileVisibility.Public)
              .Include(p => p.User)
-             .AsNoTracking() // Otimização: não rastreia entidades para queries de leitura
+             .AsNoTracking() // Optimization: does not track entities for read-only queries
              .OrderByDescending(p => p.CreatedAt);
     }
 }

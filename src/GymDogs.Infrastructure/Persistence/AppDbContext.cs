@@ -29,15 +29,20 @@ public class AppDbContext : DbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-        // Seed de Exercícios Básicos
+        // Seed Basic Exercises
         SeedExercises(modelBuilder);
     }
 
+    /// <summary>
+    /// Seeds the database with initial exercise data.
+    /// Populates the Exercise table with 60 predefined exercises covering all muscle groups.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder instance</param>
     private void SeedExercises(ModelBuilder modelBuilder)
     {
         var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        // Usando HasData com objetos anônimos - EF Core mapeia automaticamente
+        // Using HasData with anonymous objects - EF Core maps automatically
         modelBuilder.Entity<Exercise>().HasData(
             // Peitoral
             new { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Supino Reto", Description = "Exercício fundamental para desenvolvimento do peitoral maior", CreatedAt = seedDate, LastUpdatedAt = seedDate },
