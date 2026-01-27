@@ -89,12 +89,12 @@ namespace GymDogs.Presentation
                 });
 
             // CORS Configuration
-            // Lê origens permitidas do appsettings (por ambiente)
+            // Reads allowed origins from appsettings (by environment)
             var allowedOrigins = builder.Configuration
                 .GetSection("Cors:AllowedOrigins")
                 .Get<string[]>();
 
-            // Se não configurado no appsettings, usa valores padrão para desenvolvimento
+            // If not configured in appsettings, uses default values for development
             if (allowedOrigins == null || allowedOrigins.Length == 0)
             {
                 allowedOrigins = builder.Environment.IsDevelopment()
@@ -108,16 +108,16 @@ namespace GymDogs.Presentation
                 {
                     if (builder.Environment.IsDevelopment())
                     {
-                        // Desenvolvimento: permite origens configuradas + qualquer método/header
+                        // Development: allows configured origins + any method/header
                         policy.WithOrigins(allowedOrigins)
                               .AllowAnyHeader()
                               .AllowAnyMethod()
                               .AllowCredentials()
-                              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight por 24h
+                              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // Cache preflight for 24h
                     }
                     else
                     {
-                        // Produção: mais restritivo
+                        // Production: more restrictive
                         policy.WithOrigins(allowedOrigins)
                               .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                               .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
@@ -135,8 +135,8 @@ namespace GymDogs.Presentation
             builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
 
-            // Strategy Pattern: Registro das estratégias de mapeamento de exceções
-            // A ordem importa: estratégias específicas primeiro, default por último
+            // Strategy Pattern: Registration of exception mapping strategies
+            // Order matters: specific strategies first, default last
             builder.Services.AddScoped<IExceptionMappingStrategy, ArgumentNullExceptionStrategy>();
             builder.Services.AddScoped<IExceptionMappingStrategy, ArgumentExceptionStrategy>();
             builder.Services.AddScoped<IExceptionMappingStrategy, InvalidOperationExceptionStrategy>();
@@ -169,18 +169,18 @@ namespace GymDogs.Presentation
 
             var app = builder.Build();
 
-            // CORS deve vir ANTES de qualquer outro middleware
-            // Isso permite que requisições OPTIONS (preflight) sejam processadas
+            // CORS must come BEFORE any other middleware
+            // This allows OPTIONS (preflight) requests to be processed
             app.UseCors("AllowFrontend");
 
-            // Response Compression - Deve vir antes de outros middlewares
+            // Response Compression - Must come before other middlewares
             app.UseResponseCompression();
 
-            // Response Caching - Deve vir antes de UseRouting/UseEndpoints
+            // Response Caching - Must come before UseRouting/UseEndpoints
             app.UseResponseCaching();
 
-            // HTTPS Redirection pode interferir com CORS em desenvolvimento
-            // Apenas usar em produção
+            // HTTPS Redirection can interfere with CORS in development
+            // Only use in production
             if (!app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
