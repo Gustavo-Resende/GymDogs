@@ -1,8 +1,3 @@
-# GymDogs
-
-API REST para gerenciamento e acompanhamento de treinos de academia, desenvolvida com Clean Architecture, CQRS e ASP.NET Core.
-
----
 
 ## 🎯 Sobre o Projeto
 
