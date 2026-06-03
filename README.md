@@ -15,7 +15,7 @@ O **GymDogs** é uma aplicação para gerenciamento e acompanhamento de treinos 
 - **👥 Compartilhamento**: Visualize perfis públicos de outros usuários e seus treinos
 - **⚡ Performance Otimizada**: HTTP Compression, Response Caching e otimizações de queries
 
-### 🎨 Funcionalidades Futuras (Roadmap)
+### 🎨 Funcionalidades Futuras
 
 #### Fase 1 - Melhorias de UX
 - [ ] Paginação e infinite scroll para listagens grandes
