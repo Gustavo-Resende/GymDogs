@@ -42,7 +42,7 @@ O **GymDogs** é uma aplicação para gerenciamento e acompanhamento de treinos 
 
 ### 📋 Pré-requisitos
 
-- **Docker Desktop** (Windows/Mac) ou **Docker Engine + Docker Compose** (Linux)
+- **Docker Desktop** (Windows/Mac) **Docker Engine + Docker Compose** (Linux)
 - **Portas disponíveis**: 8080 (API), 5051 (pgAdmin), 5432 (PostgreSQL)
 
 ### ⚡ Início Rápido
