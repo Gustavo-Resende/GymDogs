@@ -78,7 +78,7 @@ chmod +x docker-init.sh
 
 #### Passo 3: Acesse os serviços
 
-Após o script concluir, você terá acesso a:
+Após o script concluir, você terá acesso:
 
 - **API**: http://localhost:8080
 - **Swagger/OpenAPI**: http://localhost:8080/scalar/v1 (em desenvolvimento)
